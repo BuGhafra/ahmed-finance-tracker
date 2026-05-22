@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -278,6 +277,12 @@ input::placeholder{color:var(--muted)}
 </nav>
 
 <script>
+// FORCE WIPE ALL OLD DATA
+(function(){
+  for(let i=0;i<10;i++) localStorage.removeItem('ahmedFinanceV'+i);
+  localStorage.removeItem('ahmedFinance');
+})();
+
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
 
@@ -328,18 +333,19 @@ const BILL_TEMPLATES = [
 
 // ── MAY 2026 SEED TRANSACTIONS ───────────────────────────────────
 const MAY_SEED = [
-  { id:'seed_1',  type:'income',  desc:'Salary',           amount:736.000, category:'income',   date:'2026-05-25', source:'seed' },
-  { id:'seed_2',  type:'expense', desc:'Loan Payment 1',   amount:255.893, category:'loans',    date:'2026-05-25', source:'seed' },
-  { id:'seed_3',  type:'expense', desc:'Loan Payment 2',   amount:97.081,  category:'loans',    date:'2026-05-25', source:'seed' },
-
-  { id:'seed_5',  type:'expense', desc:'MSAKHAM QURUM',    amount:2.520,   category:'food',     date:'2026-05-20', source:'seed' },
-  { id:'seed_6',  type:'income',  desc:'Received from Shamsa', amount:3.000, category:'income', date:'2026-05-21', source:'seed' },
-  { id:'seed_7',  type:'expense', desc:'World Shoes',      amount:20.800,  category:'social',   date:'2026-05-21', source:'seed' },
-  { id:'seed_8',  type:'expense', desc:'MENA Foods',       amount:4.000,   category:'food',     date:'2026-05-21', source:'seed' },
-  { id:'seed_9',  type:'expense', desc:'Barbershop',       amount:1.000,   category:'personal', date:'2026-05-21', source:'seed' },
-  { id:'seed_10', type:'expense', desc:'Account Transfer', amount:1.000,   category:'other',    date:'2026-05-22', source:'seed' },
-  // Adjustment to reach exact 323 OMR balance
-  { id:'seed_adj', type:'income', desc:'Opening Adjustment', amount:6.794, category:'income',  date:'2026-05-01', source:'seed' },
+  { id:'seed_1', type:'income',  desc:'Salary',          amount:736.000, category:'income',    date:'2026-05-20', source:'seed' },
+  { id:'seed_2', type:'expense', desc:'Loan Payment 1',  amount:255.893, category:'loans',     date:'2026-05-20', source:'seed' },
+  { id:'seed_3', type:'expense', desc:'Loan Payment 2',  amount:97.081,  category:'loans',     date:'2026-05-20', source:'seed' },
+  { id:'seed_4', type:'expense', desc:'Oman Oil Petrol', amount:3.000,   category:'transport', date:'2026-05-20', source:'seed' },
+  { id:'seed_5', type:'expense', desc:'AMUR Transfer',   amount:30.882,  category:'other',     date:'2026-05-20', source:'seed' },
+  // Transactions missed by Firebase (shortcut was broken)
+  { id:'seed_ms', type:'expense', desc:'MSAKHAM QURUM', amount:2.520, category:'food', date:'2026-05-20', source:'seed' },
+  { id:'seed_6', type:'income',  desc:'Received from Shamsa',  amount:3.000,  category:'income',   date:'2026-05-21', source:'seed' },
+  { id:'seed_7', type:'expense', desc:'World Shoes',           amount:20.800, category:'social',   date:'2026-05-21', source:'seed' },
+  { id:'seed_8', type:'expense', desc:'MENA Foods',            amount:4.000,  category:'food',     date:'2026-05-21', source:'seed' },
+  { id:'seed_9', type:'expense', desc:'Barbershop',            amount:1.000,  category:'personal', date:'2026-05-21', source:'seed' },
+  // May 22 account transfer skipped (own savings account 0022)
+  { id:'seed_11',type:'expense', desc:'ABU MAZIN AL SUBHI',    amount:0.800,  category:'food',     date:'2026-05-22', source:'seed' },
 ];
 
 // ── CATEGORY CONFIG ──────────────────────────────────────────────
@@ -367,8 +373,8 @@ function monthTxs() { const k=monthKey(); return allTransactions.filter(t=>t.dat
 function fmt(n) { return 'OMR '+Number(n).toFixed(3); }
 function fmtShort(n) { return 'OMR '+Number(n).toFixed(2); }
 
-function loadLocal() { return JSON.parse(localStorage.getItem('ahmedFinanceV3')||'{"transactions":[],"goals":{},"upcoming":{},"bills":{}}'); }
-function saveLocal(d) { localStorage.setItem('ahmedFinanceV3', JSON.stringify(d)); }
+function loadLocal() { return JSON.parse(localStorage.getItem('ahmedFinanceV9')||'{"transactions":[],"goals":{},"upcoming":{},"bills":{}}'); }
+function saveLocal(d) { localStorage.setItem('ahmedFinanceV9', JSON.stringify(d)); }
 
 function initSeed() {
   const d = loadLocal();
@@ -449,11 +455,14 @@ async function fetchSMSTransactions() {
     const res = await fetch(FIREBASE_URL+'/transactions.json');
     const data = await res.json();
     if (!data) return [];
-    const seedKeys = new Set(MAY_SEED.map(s=>s.date+'_'+s.amount));
+    // Build a set of seed fingerprints to block duplicates
+    const seedKeys = new Set(MAY_SEED.map(s => s.date + '_' + String(s.amount)));
     const txs = [];
-    Object.entries(data).forEach(([id,entry]) => {
+    Object.entries(data).forEach(([id, entry]) => {
       const parsed = parseSMS(entry.rawMessage, 'sms_'+id, entry.timestamp);
-      if (parsed && !seedKeys.has(parsed.date+'_'+parsed.amount)) txs.push(parsed);
+      if (!parsed) return;
+      const key = parsed.date + '_' + String(parsed.amount);
+      if (!seedKeys.has(key)) txs.push(parsed);
     });
     if (txs.length > lastSMSCount && lastSMSCount > 0) showSyncBar();
     lastSMSCount = txs.length;
@@ -777,6 +786,9 @@ document.addEventListener('touchstart', function startOnTouch() {
 }, { once: true });
 
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+// Wipe all old cached data
+['ahmedFinanceV9','ahmedFinanceV9','ahmedFinanceV9','ahmedFinanceV9','ahmedFinanceV9'].forEach(k=>localStorage.removeItem(k));
+
 initSeed();
 setInterval(refreshData,30000);
 document.getElementById('addDate').valueAsDate=new Date();
