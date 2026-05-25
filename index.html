@@ -263,7 +263,7 @@ input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2
 
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV14';
+const CURRENT_VERSION = 'ahmedFinanceV15';
 
 // Daily limits — active from June 2026 onwards
 const DAILY_LIMITS = { weekday: 5, weekend: 12 };
@@ -306,6 +306,7 @@ const BILL_TEMPLATES = [
   { id:'bill_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:+(6.99*USD_TO_OMR).toFixed(3),  day:23, category:'bills' },
   { id:'bill_tod',     emoji:'📺', name:'TOD 4K',          amount:+(27*USD_TO_OMR).toFixed(3),    day:28, category:'bills' },
   { id:'bill_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:+(20*USD_TO_OMR).toFixed(3),    day:2,  category:'bills' },
+  { id:'bill_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,                                  day:25, category:'gaming' },
 ];
 
 const MAY_SEED = [
@@ -519,14 +520,17 @@ function toggleUpcoming(id){
   const tmpl=UPCOMING_TEMPLATES.find(t=>t.id===id);if(!tmpl) return;
   const txId='upcoming_'+id+'_'+mk;
   if(!was){
+    // Check ON - add income
     d.upcoming[mk][id]=true;
-    d.transactions=d.transactions.filter(t=>String(t.id)!==String(txId));
+    d.transactions=d.transactions.filter(t=>t.id!==txId);
     d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
+    saveLocal(d);refreshData();
   }else{
+    // Check OFF - remove income
     d.upcoming[mk][id]=false;
-    d.transactions=d.transactions.filter(t=>String(t.id)!==String(txId));
+    d.transactions=d.transactions.filter(t=>t.id!==txId);
+    saveLocal(d);refreshData();
   }
-  saveLocal(d);refreshData();
 }
 
 function toggleBill(id){
