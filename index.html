@@ -263,7 +263,7 @@ input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2
 
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV13';
+const CURRENT_VERSION = 'ahmedFinanceV14';
 
 // Daily limits — active from June 2026 onwards
 const DAILY_LIMITS = { weekday: 5, weekend: 12 };
@@ -520,11 +520,11 @@ function toggleUpcoming(id){
   const txId='upcoming_'+id+'_'+mk;
   if(!was){
     d.upcoming[mk][id]=true;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
+    d.transactions=d.transactions.filter(t=>String(t.id)!==String(txId));
     d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
   }else{
     d.upcoming[mk][id]=false;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
+    d.transactions=d.transactions.filter(t=>String(t.id)!==String(txId));
   }
   saveLocal(d);refreshData();
 }
