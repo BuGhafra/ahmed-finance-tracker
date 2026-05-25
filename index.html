@@ -259,11 +259,11 @@ input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2
 
 <script>
 // Force wipe all old data
-(function(){ for(let i=0;i<=12;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
+(function(){ for(let i=0;i<=15;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
 
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV15';
+const CURRENT_VERSION = 'ahmedFinanceV16';
 
 // Daily limits — active from June 2026 onwards
 const DAILY_LIMITS = { weekday: 5, weekend: 12 };
@@ -365,7 +365,15 @@ function initSeed(){
   const d=loadLocal();
   if(!d.transactions.some(t=>t.id==='seed_1')){
     d.transactions=[...MAY_SEED,...d.transactions];
-
+    // Rashid 200 OMR is already in May seeds — pre-mark as received so upcoming doesn't add it again
+    d.upcoming=d.upcoming||{};
+    d.upcoming['2026-05']=d.upcoming['2026-05']||{};
+    d.upcoming['2026-05']['up_rashid']=true;
+    // Auto-mark May loans as paid since they're in seeds
+    d.bills=d.bills||{};
+    d.bills['2026-05']=d.bills['2026-05']||{};
+    d.bills['2026-05']['bill_loan1']=true;
+    d.bills['2026-05']['bill_loan2']=true;
     saveLocal(d);
   }
 }
@@ -418,11 +426,20 @@ async function fetchSMSTransactions(){
     const res=await fetch(FIREBASE_URL+'/transactions.json');
     const data=await res.json();
     if(!data) return [];
-    const seedKeys=new Set(MAY_SEED.map(s=>s.date+'_'+String(s.amount)));
+    // Load local to check which Firebase IDs we already have as seeds or manual entries
+    const local=loadLocal();
+    const existingIds=new Set(local.transactions.map(t=>String(t.id)));
+    // Also build a set of seed fingerprints: date+amount+type to block near-duplicates of seeds
+    const seedFingerprints=new Set(MAY_SEED.map(s=>s.date+'|'+s.amount.toFixed(3)+'|'+s.type));
     const txs=[];
     Object.entries(data).forEach(([id,entry])=>{
-      const parsed=parseSMS(entry.rawMessage,'sms_'+id,entry.timestamp);
-      if(parsed&&!seedKeys.has(parsed.date+'_'+String(parsed.amount))) txs.push(parsed);
+      const smsId='sms_'+id;
+      if(existingIds.has(smsId)) return; // already stored locally, skip
+      const parsed=parseSMS(entry.rawMessage,smsId,entry.timestamp);
+      if(!parsed) return;
+      const fp=parsed.date+'|'+parsed.amount.toFixed(3)+'|'+parsed.type;
+      if(seedFingerprints.has(fp)) return; // this SMS matches a seed exactly, skip
+      txs.push(parsed);
     });
     if(txs.length>lastSMSCount&&lastSMSCount>0) showSyncBar();
     lastSMSCount=txs.length;
@@ -519,18 +536,21 @@ function toggleUpcoming(id){
   const was=!!d.upcoming[mk][id];
   const tmpl=UPCOMING_TEMPLATES.find(t=>t.id===id);if(!tmpl) return;
   const txId='upcoming_'+id+'_'+mk;
+  // Covered by seed = already in seeds for this month (e.g. Rashid in May)
+  const coveredBySeed=d.transactions.some(t=>t.source==='seed'&&t.type==='income'&&Math.abs(t.amount-tmpl.amount)<0.01&&(t.date||'').startsWith(mk));
   if(!was){
-    // Check ON - add income
     d.upcoming[mk][id]=true;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
-    d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
-    saveLocal(d);refreshData();
+    if(!coveredBySeed){
+      d.transactions=d.transactions.filter(t=>t.id!==txId);
+      d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
+    }
   }else{
-    // Check OFF - remove income
     d.upcoming[mk][id]=false;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
-    saveLocal(d);refreshData();
+    if(!coveredBySeed){
+      d.transactions=d.transactions.filter(t=>t.id!==txId);
+    }
   }
+  saveLocal(d);refreshData();
 }
 
 function toggleBill(id){
@@ -614,7 +634,15 @@ function renderUpcoming(){
   const totalR=UPCOMING_TEMPLATES.filter(t=>state[t.id]).reduce((s,t)=>s+t.amount,0);
   const totalE=UPCOMING_TEMPLATES.reduce((s,t)=>s+t.amount,0);
   el.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:.75rem"><span style="color:var(--muted)">Expected</span><span style="color:var(--accent);font-family:'Orbitron',monospace">${fmtS(totalE)}</span></div>`+
-  UPCOMING_TEMPLATES.map(t=>{const done=!!state[t.id];return `<div class="upcoming-item"><div class="upcoming-check ${done?'done':'pending'}" onclick="toggleUpcoming('${t.id}')">${done?'✓':''}</div><div class="upcoming-info"><div class="upcoming-name">${t.label}</div><div class="upcoming-sub">${done?'✅ Received':'⏳ '+t.note}</div></div><div class="upcoming-amount">+${fmt(t.amount)}</div></div>`;}).join('')+
+  UPCOMING_TEMPLATES.map(t=>{
+    const done=!!state[t.id];
+    const coveredBySeed=d.transactions.some(s=>s.source==='seed'&&s.type==='income'&&Math.abs(s.amount-t.amount)<0.01&&(s.date||'').startsWith(mk));
+    // If covered by seed and checked, show as locked-received (no onclick to uncheck/re-add)
+    const lockStyle=coveredBySeed&&done?'opacity:.7;cursor:default;':''
+    const clickHandler=coveredBySeed&&done?'':`onclick="toggleUpcoming('${t.id}')"`;
+    const seedNote=coveredBySeed&&done?' <span style="font-size:.6rem;color:var(--muted)">[in seeds]</span>':''
+    return `<div class="upcoming-item"><div class="upcoming-check ${done?'done':'pending'}" ${clickHandler} style="${lockStyle}">${done?'✓':''}</div><div class="upcoming-info"><div class="upcoming-name">${t.label}${seedNote}</div><div class="upcoming-sub">${done?'✅ Received':'⏳ '+t.note}</div></div><div class="upcoming-amount">+${fmt(t.amount)}</div></div>`;
+  }).join('')+
   `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--dim);display:flex;justify-content:space-between;font-size:.75rem"><span style="color:var(--muted)">Received</span><span style="color:var(--accent);font-family:'Orbitron',monospace">${fmtS(totalR)} / ${fmtS(totalE)}</span></div>`;
 }
 
