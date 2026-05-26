@@ -382,18 +382,19 @@ const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const SALARY = 736;
 
 const BILLS = [
-  { id:'b_loan1',   emoji:'🏦', name:'Loan Payment 1',  amount:255.893, day:20, cat:'loans',   autoDeduct:true },
-  { id:'b_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:20, cat:'loans',   autoDeduct:true },
-  { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:31.000,  day:5,  cat:'other',   smsMatch:{type:'sent', nameContains:'amur'} },
-  { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'vodafone', amountMin:12, amountMax:13} },
-  { id:'b_wifi',    emoji:'📶', name:'WiFi',            amount:12.600,  day:1,  cat:'bills' },
-  { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.956,   day:17, cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:3.5, amountMax:4.5} },
-  { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.788,   day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:0.1, amountMax:1.5} },
-  { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.768,   day:23, cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:1.6, amountMax:3.4} },
-  { id:'b_tod',     emoji:'📺', name:'TOD 4K',          amount:10.696,  day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'tod', amountMin:10, amountMax:12} },
-  { id:'b_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:7.700,   day:2,  cat:'bills',   startsMonth:'2026-06', smsMatch:{type:'card', merchantContains:'openai', amountMin:7, amountMax:9} },
-  { id:'b_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,   day:25, cat:'bills',   smsMatch:{type:'card', merchantContains:'microsoft', amountMin:3, amountMax:4} },
-  { id:'b_talabat', emoji:'🛵', name:'Talabat Pro',     amount:2.000,   day:3,  cat:'food',    smsMatch:{type:'card', merchantContains:'talabat', amountMin:1.5, amountMax:2.5} },
+  // day = day of month due, monthOffset = 0 same month, 1 = next month after salary
+  { id:'b_loan1',   emoji:'🏦', name:'Loan Payment 1',  amount:255.893, day:25, monthOffset:0, cat:'loans',  autoDeduct:true },
+  { id:'b_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:25, monthOffset:0, cat:'loans',  autoDeduct:true },
+  { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:31.000,  day:15, monthOffset:1, cat:'other',  smsMatch:{type:'sent', nameContains:'amur'} },
+  { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'vodafone', amountMin:12, amountMax:13} },
+  { id:'b_wifi',    emoji:'📶', name:'WiFi',            amount:12.600,  day:1,  monthOffset:1, cat:'bills' },
+  { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.956,   day:17, monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:3.5, amountMax:4.5} },
+  { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.788,   day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:0.1, amountMax:1.5} },
+  { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.768,   day:23, monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:1.6, amountMax:3.4} },
+  { id:'b_tod',     emoji:'📺', name:'TOD 4K',          amount:10.696,  day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'tod', amountMin:10, amountMax:12} },
+  { id:'b_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:7.700,   day:2,  monthOffset:1, cat:'bills',  startsMonth:'2026-06', smsMatch:{type:'card', merchantContains:'openai', amountMin:7, amountMax:9} },
+  { id:'b_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,   day:25, monthOffset:0, cat:'bills',  smsMatch:{type:'card', merchantContains:'microsoft', amountMin:3, amountMax:4} },
+  { id:'b_talabat', emoji:'🛵', name:'Talabat Pro',     amount:2.000,   day:3,  monthOffset:1, cat:'food',   smsMatch:{type:'card', merchantContains:'talabat', amountMin:1.5, amountMax:2.5} },
 ];
 
 const UPCOMING = [
@@ -764,12 +765,22 @@ function toggleUpcoming(id) {
 }
 
 // ── BILLS ─────────────────────────────────────────────────────
+function billDueDate(b, salaryMonthKey) {
+  // salaryMonthKey = 'YYYY-MM' of the salary month (e.g. '2026-05')
+  const [yr, mo] = salaryMonthKey.split('-').map(Number);
+  const offset = b.monthOffset || 0;
+  let dueMonth = mo - 1 + offset; // 0-indexed
+  let dueYear = yr + Math.floor(dueMonth / 12);
+  dueMonth = dueMonth % 12;
+  return new Date(dueYear, dueMonth, b.day);
+}
+
 function renderBills() {
   const d = load();
   const k = mk();
-  const paid = d.bills[k] || {};
+  const paidState = d.bills[k] || {};
   const now = new Date();
-  const curDay = now.getDate();
+  now.setHours(0,0,0,0);
   const curMk = mk(now);
   const isCurrentMonth = (k === curMk);
 
@@ -780,19 +791,38 @@ function renderBills() {
   BILLS.forEach(b => {
     // Skip if not started yet
     if (b.startsMonth && k < b.startsMonth) return;
-    const isPaid = !!paid[b.id];
+
+    // isPaid: either manually marked OR a bill_tx transaction exists for this month
+    const billTxId = 'bill_tx_' + b.id + '_' + k;
+    const hasBillTx = allTxs.some(t => t.id === billTxId);
+    const isPaid = !!paidState[b.id] || hasBillTx;
+
+    // Sync state if detected via transaction
+    if (isPaid && !paidState[b.id]) {
+      d.bills[k] = d.bills[k] || {};
+      d.bills[k][b.id] = true;
+      save(d);
+    }
+
     totalAmt += b.amount;
     if (isPaid) totalPaid += b.amount;
 
     let dueLabel='', dueClass='';
-    if (isPaid) { dueLabel='Paid ✓'; dueClass='paid'; }
-    else if (isCurrentMonth) {
-      const diff = b.day - curDay;
-      if (diff < 0) { dueLabel=`Overdue by ${Math.abs(diff)}d`; dueClass='overdue'; }
-      else if (diff === 0) { dueLabel='Due today!'; dueClass='today'; }
-      else if (diff <= 5) { dueLabel=`Due in ${diff}d`; dueClass='soon'; }
-      else { dueLabel=`Due ${b.day}th`; dueClass=''; }
-    } else { dueLabel=`Due ${b.day}th`; }
+    if (isPaid) {
+      dueLabel='Paid ✓'; dueClass='paid';
+    } else {
+      // Calculate due date based on salary month + monthOffset
+      const dueDate = billDueDate(b, k);
+      const diffMs = dueDate.getTime() - now.getTime();
+      const diffDays = Math.round(diffMs / (1000*60*60*24));
+      const dueDateStr = dueDate.toLocaleDateString('en',{month:'short',day:'numeric'});
+      if (isCurrentMonth || true) {
+        if (diffDays < 0) { dueLabel=`Overdue by ${Math.abs(diffDays)}d`; dueClass='overdue'; }
+        else if (diffDays === 0) { dueLabel='Due today!'; dueClass='today'; }
+        else if (diffDays <= 5) { dueLabel=`${diffDays}d left — ${dueDateStr}`; dueClass='soon'; }
+        else { dueLabel=`Due ${dueDateStr}`; dueClass=''; }
+      }
+    }
 
     html += `<div class="bill-item">
       <div class="bill-icon">${b.emoji}</div>
