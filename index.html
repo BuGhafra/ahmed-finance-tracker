@@ -494,6 +494,10 @@ function initSeeds() {
   d.upcoming['2026-05'] = d.upcoming['2026-05'] || {};
   d.upcoming['2026-05']['u_rashid'] = true;
   d.upcoming['2026-05']['u_suhaib'] = true;
+  // Ensure only May has pre-marked bills — wipe any other months
+  Object.keys(d.bills).forEach(monthK => {
+    if (monthK !== '2026-05') delete d.bills[monthK];
+  });
   save(d);
 }
 
@@ -770,9 +774,40 @@ function toggleBill(id) {
   const d = load();
   const k = mk();
   d.bills[k] = d.bills[k] || {};
-  d.bills[k][id] = !d.bills[k][id];
+  const wasPaid = !!d.bills[k][id];
+  const bill = BILLS.find(b => b.id === id);
+  if (!bill) return;
+  const txId = 'bill_tx_' + id + '_' + k;
+
+  if (!wasPaid) {
+    // Mark as PAID — add expense transaction
+    d.bills[k][id] = true;
+    // Don't add transaction if already covered by a seed (loans, amur already seeded)
+    const inSeeds = d.txs.some(t =>
+      (t.id||'').startsWith('s') &&
+      t.type==='expense' &&
+      Math.abs(t.amount - bill.amount) < 0.01 &&
+      (t.date||'').startsWith(k)
+    );
+    if (!inSeeds) {
+      d.txs = d.txs.filter(t => t.id !== txId);
+      d.txs.push({
+        id: txId,
+        type: 'expense',
+        desc: bill.name,
+        amount: bill.amount,
+        cat: bill.cat,
+        date: today(),
+        source: 'bill'
+      });
+    }
+  } else {
+    // Mark as UNPAID — remove transaction
+    d.bills[k][id] = false;
+    d.txs = d.txs.filter(t => t.id !== txId);
+  }
   save(d);
-  renderBills();
+  refresh();
 }
 
 // ── SAVINGS PLANNER ───────────────────────────────────────────
@@ -781,45 +816,53 @@ function renderSavings(balance, mSpent) {
   const savAmt = parseInt(slider.value);
   document.getElementById('savVal').textContent = savAmt+' OMR';
 
-  // Calculate remaining after fixed bills (unpaid)
+  // Bills remaining = only unpaid bills that haven't been seeded already
   const d = load();
   const k = mk();
   const paid = d.bills[k] || {};
   let billsLeft = 0;
   BILLS.forEach(b => {
     if (b.startsMonth && k < b.startsMonth) return;
-    if (!paid[b.id]) billsLeft += b.amount;
+    if (paid[b.id]) return; // already marked paid
+    // Check if this bill is already covered by a seed transaction this month
+    const inSeeds = d.txs.some(t =>
+      (t.id||'').startsWith('s') &&
+      t.type==='expense' &&
+      Math.abs(t.amount - b.amount) < 0.01 &&
+      (t.date||'').startsWith(k)
+    );
+    if (!inSeeds) billsLeft += b.amount;
   });
 
   const freeMoney = balance - savAmt - billsLeft;
   const daysLeft = daysRemainingInMonth();
   const workdays = workdaysLeft();
-  const weekendDays = daysLeft - workdays;
+  const weekendDays = Math.max(0, daysLeft - workdays);
 
-  // Daily limits: weekdays Sun-Wed (5 days/wk), weekends Thu-Sat
-  // Use free money / days but split by ratio
-  const dailyWeekday = workdays > 0 ? (freeMoney * 0.6 / Math.max(workdays,1)) : 0;
-  const dailyWeekend = weekendDays > 0 ? (freeMoney * 0.4 / Math.max(weekendDays,1)) : 0;
+  // Daily limits: split free money between weekdays and weekends
+  // Weekday (Sun-Wed) gets slightly less than weekend (Thu-Sat)
+  const dailyWeekday = (freeMoney > 0 && workdays > 0) ? (freeMoney * 0.55 / workdays) : 0;
+  const dailyWeekend = (freeMoney > 0 && weekendDays > 0) ? (freeMoney * 0.45 / weekendDays) : 0;
 
-  const freeColor = freeMoney < 0 ? 'danger' : freeMoney < 50 ? 'warn' : '';
+  const freeColor = freeMoney < 0 ? 'danger' : freeMoney < 30 ? 'warn' : '';
 
   document.getElementById('savInfo').innerHTML = `
     <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
     <div class="sav-line"><span>Save this month</span><span>- ${fmtS(savAmt)}</span></div>
-    <div class="sav-line"><span>Bills remaining</span><span class="warn">- ${fmtS(billsLeft)}</span></div>
-    <div class="sav-line"><span>Free to spend</span><span class="${freeColor}">${fmtS(freeMoney)}</span></div>
+    <div class="sav-line"><span>Bills remaining</span><span class="${billsLeft>0?'warn':''}">${billsLeft>0?'- '+fmtS(billsLeft):'✓ All paid'}</span></div>
+    <div class="sav-line"><span>Free to spend</span><span class="${freeColor}">${fmtS(Math.max(0,freeMoney))}</span></div>
     <div class="sav-line"><span>Days left in month</span><span>${daysLeft}</span></div>
   `;
 
   document.getElementById('dayBox').innerHTML = `
     <div class="day-card">
       <div class="day-lbl">Weekday Limit</div>
-      <div class="day-amt">${fmtS(Math.max(0,dailyWeekday))}</div>
+      <div class="day-amt" style="color:${dailyWeekday>0?'var(--green)':'var(--danger)'}">${fmtS(dailyWeekday)}</div>
       <div class="day-sub">Sun–Wed per day</div>
     </div>
     <div class="day-card">
       <div class="day-lbl">Weekend Limit</div>
-      <div class="day-amt">${fmtS(Math.max(0,dailyWeekend))}</div>
+      <div class="day-amt" style="color:${dailyWeekend>0?'var(--green)':'var(--danger)'}">${fmtS(dailyWeekend)}</div>
       <div class="day-sub">Thu–Sat per day</div>
     </div>
   `;
@@ -1035,9 +1078,25 @@ function goTo(page) {
   if (page==='history') renderHistory();
 }
 
+// ── CLEAN BILL STATES ────────────────────────────────────────
+function cleanBillStates() {
+  // Remove any bill paid states for months OTHER than May 2026
+  // (prevents accidental clicks from corrupting other months)
+  const d = load();
+  let changed = false;
+  Object.keys(d.bills).forEach(monthK => {
+    if (monthK !== '2026-05') {
+      delete d.bills[monthK];
+      changed = true;
+    }
+  });
+  if (changed) save(d);
+}
+
 // ── BOOT ─────────────────────────────────────────────────────
 wipeOld();
 initSeeds();
+cleanBillStates();
 refresh();
 setInterval(refresh, 30000); // Auto-refresh every 30s
 </script>
