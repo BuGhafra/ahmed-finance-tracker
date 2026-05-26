@@ -259,11 +259,11 @@ input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2
 
 <script>
 // Force wipe all old data
-(function(){ for(let i=0;i<=15;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
+(function(){ for(let i=0;i<=17;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
 
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV16';
+const CURRENT_VERSION = 'ahmedFinanceV18';
 
 // Daily limits — active from June 2026 onwards
 const DAILY_LIMITS = { weekday: 5, weekend: 12 };
@@ -310,29 +310,48 @@ const BILL_TEMPLATES = [
 ];
 
 const MAY_SEED = [
-  { id:'seed_1',  type:'income',  desc:'Salary',              amount:736.000, category:'income',    date:'2026-05-20', source:'seed' },
-  { id:'seed_2',  type:'expense', desc:'Loan Payment 1',      amount:255.893, category:'loans',     date:'2026-05-20', source:'seed' },
-  { id:'seed_3',  type:'expense', desc:'Loan Payment 2',      amount:97.081,  category:'loans',     date:'2026-05-20', source:'seed' },
-  { id:'seed_4',  type:'expense', desc:'Oman Oil Petrol',     amount:3.000,   category:'transport', date:'2026-05-20', source:'seed' },
-  { id:'seed_5',  type:'expense', desc:'AMUR Transfer',       amount:30.882,  category:'other',     date:'2026-05-20', source:'seed' },
-  { id:'seed_ms', type:'expense', desc:'MSAKHAM QURUM',       amount:2.520,   category:'food',      date:'2026-05-20', source:'seed' },
-  { id:'seed_6',  type:'income',  desc:'Received from Shamsa',amount:3.000,   category:'income',    date:'2026-05-21', source:'seed' },
-  { id:'seed_7',  type:'expense', desc:'World Shoes',         amount:20.800,  category:'social',    date:'2026-05-21', source:'seed' },
-  { id:'seed_8',  type:'expense', desc:'MENA Foods',          amount:4.000,   category:'food',      date:'2026-05-21', source:'seed' },
-  { id:'seed_9',  type:'expense', desc:'Barbershop',          amount:1.000,   category:'personal',  date:'2026-05-21', source:'seed' },
-  { id:'seed_10', type:'expense', desc:'ABU MAZIN AL SUBHI',  amount:0.800,   category:'food',      date:'2026-05-22', source:'seed' },
-  { id:'seed_11', type:'expense', desc:'Perfume (WADH)',       amount:2.400,   category:'social',    date:'2026-05-22', source:'seed' },
-  { id:'seed_12', type:'expense', desc:'HYPERMAX MUSCAT',     amount:1.680,   category:'food',      date:'2026-05-22', source:'seed' },
-  { id:'seed_13', type:'expense', desc:'WADH',                amount:17.400,  category:'social',    date:'2026-05-23', source:'seed' },
-  { id:'seed_14', type:'expense', desc:'HYPERMAX MUSCAT',     amount:0.780,   category:'food',      date:'2026-05-23', source:'seed' },
-  { id:'seed_15', type:'expense', desc:'HYPERMAX MUSCAT',     amount:0.570,   category:'food',      date:'2026-05-23', source:'seed' },
-  { id:'seed_16', type:'expense', desc:'Talabat',             amount:2.590,   category:'food',      date:'2026-05-23', source:'seed' },
-  { id:'seed_17', type:'expense', desc:'Gift to Brother',     amount:10.000,  category:'social',    date:'2026-05-24', source:'seed' },
-  { id:'seed_18', type:'income',  desc:'Received from Shamsa',amount:42.000,  category:'income',    date:'2026-05-24', source:'seed' },
-  { id:'seed_19', type:'expense', desc:'AL AMIRA Restaurant', amount:3.385,   category:'food',      date:'2026-05-24', source:'seed' },
-  { id:'seed_20', type:'expense', desc:'Loan to Father',      amount:50.000,  category:'other',     date:'2026-05-25', source:'seed' },
-  { id:'seed_21', type:'expense', desc:'Microsoft Game Pass', amount:3.500,   category:'bills',     date:'2026-05-25', source:'seed' },
-  { id:'seed_22', type:'expense', desc:'eToro Investment',    amount:300.000, category:'saving',    date:'2026-05-25', source:'seed' },
+  // ── May 20 ──────────────────────────────────────────────────
+  { id:'seed_s0',  type:'income',  desc:'Opening Balance',        amount:2.418,   category:'income',    date:'2026-05-20', source:'seed' },
+  { id:'seed_s1',  type:'income',  desc:'Received from Shamsa',   amount:5.000,   category:'income',    date:'2026-05-20', source:'seed' },
+  { id:'seed_1',   type:'expense', desc:'Oman Oil Petrol',        amount:3.000,   category:'transport', date:'2026-05-20', source:'seed' },
+  { id:'seed_2',   type:'income',  desc:'Salary',                 amount:736.000, category:'income',    date:'2026-05-20', source:'seed' },
+  { id:'seed_3',   type:'expense', desc:'Loan Payment 1',         amount:255.893, category:'loans',     date:'2026-05-20', source:'seed' },
+  { id:'seed_4',   type:'expense', desc:'Loan Payment 2',         amount:97.081,  category:'loans',     date:'2026-05-20', source:'seed' },
+  { id:'seed_5',   type:'expense', desc:'AMUR Transfer',          amount:36.300,  category:'other',     date:'2026-05-20', source:'seed' },
+  { id:'seed_6',   type:'expense', desc:'MSAKHAM QURUM',          amount:2.520,   category:'food',      date:'2026-05-20', source:'seed' },
+  { id:'seed_sa',  type:'expense', desc:'Savings Transfer',       amount:1.000,   category:'other',     date:'2026-05-20', source:'seed' },
+  // ── May 21 ──────────────────────────────────────────────────
+  { id:'seed_7',   type:'income',  desc:'Received from Shamsa',   amount:3.000,   category:'income',    date:'2026-05-21', source:'seed' },
+  { id:'seed_8',   type:'expense', desc:'World Shoes',            amount:20.800,  category:'social',    date:'2026-05-21', source:'seed' },
+  { id:'seed_9',   type:'expense', desc:'MENA Foods',             amount:4.000,   category:'food',      date:'2026-05-21', source:'seed' },
+  { id:'seed_10',  type:'expense', desc:'Barbershop',             amount:1.000,   category:'personal',  date:'2026-05-21', source:'seed' },
+  // ── May 22 ──────────────────────────────────────────────────
+  { id:'seed_sb',  type:'expense', desc:'Savings Transfer',       amount:1.000,   category:'other',     date:'2026-05-22', source:'seed' },
+  { id:'seed_11',  type:'expense', desc:'ABU MAZIN AL SUBHI',     amount:0.800,   category:'food',      date:'2026-05-22', source:'seed' },
+  { id:'seed_12',  type:'expense', desc:'WADH (Perfume)',         amount:2.400,   category:'social',    date:'2026-05-22', source:'seed' },
+  { id:'seed_13',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:1.680,   category:'food',      date:'2026-05-22', source:'seed' },
+  // ── May 23 ──────────────────────────────────────────────────
+  { id:'seed_14',  type:'expense', desc:'WADH',                   amount:17.400,  category:'social',    date:'2026-05-23', source:'seed' },
+  { id:'seed_15',  type:'income',  desc:'Received from Rashid',   amount:200.000, category:'income',    date:'2026-05-23', source:'seed' },
+  { id:'seed_16',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.780,   category:'food',      date:'2026-05-23', source:'seed' },
+  { id:'seed_17',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.570,   category:'food',      date:'2026-05-23', source:'seed' },
+  { id:'seed_18',  type:'expense', desc:'Talabat',                amount:2.590,   category:'food',      date:'2026-05-23', source:'seed' },
+  // ── May 24 ──────────────────────────────────────────────────
+  { id:'seed_19',  type:'expense', desc:'Gift to Brother',        amount:10.000,  category:'social',    date:'2026-05-24', source:'seed' },
+  { id:'seed_20',  type:'income',  desc:'Received from Shamsa',   amount:42.000,  category:'income',    date:'2026-05-24', source:'seed' },
+  { id:'seed_21',  type:'expense', desc:'AL AMIRA Restaurant',    amount:3.385,   category:'food',      date:'2026-05-24', source:'seed' },
+  // ── May 25 ──────────────────────────────────────────────────
+  { id:'seed_22',  type:'expense', desc:'Loan to Father',         amount:50.000,  category:'other',     date:'2026-05-25', source:'seed' },
+  { id:'seed_23',  type:'expense', desc:'Microsoft Game Pass',    amount:3.500,   category:'bills',     date:'2026-05-25', source:'seed' },
+  { id:'seed_24',  type:'expense', desc:'eToro Investment',       amount:300.000, category:'saving',    date:'2026-05-25', source:'seed' },
+  { id:'seed_25',  type:'expense', desc:'World Shoes (2nd pair)', amount:28.000,  category:'social',    date:'2026-05-25', source:'seed' },
+  { id:'seed_26',  type:'expense', desc:'Barbershop',             amount:4.500,   category:'personal',  date:'2026-05-25', source:'seed' },
+  { id:'seed_27',  type:'expense', desc:'SAFWA ALMAABILA',        amount:0.250,   category:'other',     date:'2026-05-25', source:'seed' },
+  { id:'seed_28',  type:'expense', desc:'Apple.com/iTunes',       amount:2.768,   category:'bills',     date:'2026-05-25', source:'seed' },
+  // Loan 255.893 auto-debited from savings account (0022) - does not affect main balance
+  { id:'seed_29',  type:'income',  desc:'Received from Suhaib',   amount:25.000,  category:'income',    date:'2026-05-25', source:'seed' },
+  // ── May 26 ──────────────────────────────────────────────────
+  { id:'seed_30',  type:'expense', desc:'AL NOKHODA SMOKING',     amount:2.500,   category:'other',     date:'2026-05-26', source:'seed' },
 ];
 
 const CATS = {
@@ -365,15 +384,20 @@ function initSeed(){
   const d=loadLocal();
   if(!d.transactions.some(t=>t.id==='seed_1')){
     d.transactions=[...MAY_SEED,...d.transactions];
-    // Rashid 200 OMR is already in May seeds — pre-mark as received so upcoming doesn't add it again
+    // Mark already-paid bills for May 2026
+    d.bills=d.bills||{};
+    d.bills['2026-05']=d.bills['2026-05']||{};
+    d.bills['2026-05']['bill_loan1']=true;   // Loan 1 paid (auto-deducted May 20)
+    d.bills['2026-05']['bill_loan2']=true;   // Loan 2 paid (auto-deducted May 20)
+    d.bills['2026-05']['bill_amur']=true;    // AMUR paid May 20 (36.3)
+    d.bills['2026-05']['bill_xbox']=true;    // Xbox Game Pass paid May 25
+    d.bills['2026-05']['bill_ytmusic']=true; // YouTube Music paid May 25 (via Apple)
+    d.bills['2026-05']['bill_icloud']=true;  // iCloud+ paid (via Apple May 25)
+    // Mark Rashid as received (already in seeds May 23)
     d.upcoming=d.upcoming||{};
     d.upcoming['2026-05']=d.upcoming['2026-05']||{};
     d.upcoming['2026-05']['up_rashid']=true;
-    // Auto-mark May loans as paid since they're in seeds
-    d.bills=d.bills||{};
-    d.bills['2026-05']=d.bills['2026-05']||{};
-    d.bills['2026-05']['bill_loan1']=true;
-    d.bills['2026-05']['bill_loan2']=true;
+    d.upcoming['2026-05']['up_suhaib']=true; // Suhaib received May 25
     saveLocal(d);
   }
 }
