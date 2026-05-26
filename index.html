@@ -225,7 +225,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
   font-size:1.2rem;cursor:pointer;padding:0 4px}
 
 /* FAB */
-.fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;
+.fab{position:fixed;bottom:122px;right:16px;width:52px;height:52px;border-radius:50%;
   background:var(--accent);color:#0a0800;border:none;font-size:1.6rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;z-index:300;
   box-shadow:var(--glow);transition:transform .15s}
@@ -780,27 +780,20 @@ function toggleBill(id) {
   const txId = 'bill_tx_' + id + '_' + k;
 
   if (!wasPaid) {
-    // Mark as PAID — add expense transaction
+    // Mark as PAID
     d.bills[k][id] = true;
-    // Don't add transaction if already covered by a seed (loans, amur already seeded)
-    const inSeeds = d.txs.some(t =>
-      (t.id||'').startsWith('s') &&
-      t.type==='expense' &&
-      Math.abs(t.amount - bill.amount) < 0.01 &&
-      (t.date||'').startsWith(k)
-    );
-    if (!inSeeds) {
-      d.txs = d.txs.filter(t => t.id !== txId);
-      d.txs.push({
-        id: txId,
-        type: 'expense',
-        desc: bill.name,
-        amount: bill.amount,
-        cat: bill.cat,
-        date: today(),
-        source: 'bill'
-      });
-    }
+    // Always add a transaction UNLESS this bill ID's transaction already exists
+    // (seeds cover loan1, loan2, amur — they have different IDs so no collision)
+    d.txs = d.txs.filter(t => t.id !== txId); // remove if exists
+    d.txs.push({
+      id: txId,
+      type: 'expense',
+      desc: bill.name,
+      amount: bill.amount,
+      cat: bill.cat,
+      date: today(),
+      source: 'bill'
+    });
   } else {
     // Mark as UNPAID — remove transaction
     d.bills[k][id] = false;
@@ -834,35 +827,39 @@ function renderSavings(balance, mSpent) {
     if (!inSeeds) billsLeft += b.amount;
   });
 
-  const freeMoney = balance - savAmt - billsLeft;
+  // spendable = balance after saving goal and remaining bills
+  const afterSavings = balance - savAmt;
+  const spendable = afterSavings - billsLeft;
+  // Daily limits based purely on spendable / days left (savings already removed)
   const daysLeft = daysRemainingInMonth();
   const workdays = workdaysLeft();
   const weekendDays = Math.max(0, daysLeft - workdays);
+  const totalDays = Math.max(1, daysLeft);
+  // Weekdays get 55%, weekends get 45% of spendable
+  const dailyWeekday = (spendable > 0 && workdays > 0) ? (spendable * 0.55 / workdays) : 0;
+  const dailyWeekend = (spendable > 0 && weekendDays > 0) ? (spendable * 0.45 / weekendDays) : 0;
 
-  // Daily limits: split free money between weekdays and weekends
-  // Weekday (Sun-Wed) gets slightly less than weekend (Thu-Sat)
-  const dailyWeekday = (freeMoney > 0 && workdays > 0) ? (freeMoney * 0.55 / workdays) : 0;
-  const dailyWeekend = (freeMoney > 0 && weekendDays > 0) ? (freeMoney * 0.45 / weekendDays) : 0;
-
-  const freeColor = freeMoney < 0 ? 'danger' : freeMoney < 30 ? 'warn' : '';
+  const spendColor = spendable < 0 ? 'danger' : spendable < 30 ? 'warn' : '';
+  const afterColor = afterSavings < 0 ? 'danger' : '';
 
   document.getElementById('savInfo').innerHTML = `
     <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
-    <div class="sav-line"><span>Save this month</span><span>- ${fmtS(savAmt)}</span></div>
+    <div class="sav-line"><span>Saving goal</span><span class="${afterColor}">- ${fmtS(savAmt)}</span></div>
+    <div class="sav-line"><span>After saving</span><span class="${afterColor}">${fmtS(afterSavings)}</span></div>
     <div class="sav-line"><span>Bills remaining</span><span class="${billsLeft>0?'warn':''}">${billsLeft>0?'- '+fmtS(billsLeft):'✓ All paid'}</span></div>
-    <div class="sav-line"><span>Free to spend</span><span class="${freeColor}">${fmtS(Math.max(0,freeMoney))}</span></div>
-    <div class="sav-line"><span>Days left in month</span><span>${daysLeft}</span></div>
+    <div class="sav-line"><span>Free to spend</span><span class="${spendColor}">${fmtS(Math.max(0,spendable))}</span></div>
+    <div class="sav-line"><span>Days left</span><span>${daysLeft} days</span></div>
   `;
 
   document.getElementById('dayBox').innerHTML = `
     <div class="day-card">
       <div class="day-lbl">Weekday Limit</div>
-      <div class="day-amt" style="color:${dailyWeekday>0?'var(--green)':'var(--danger)'}">${fmtS(dailyWeekday)}</div>
+      <div class="day-amt" style="color:${dailyWeekday>0?'var(--green)':'var(--danger)'}">${fmtS(Math.max(0,dailyWeekday))}</div>
       <div class="day-sub">Sun–Wed per day</div>
     </div>
     <div class="day-card">
       <div class="day-lbl">Weekend Limit</div>
-      <div class="day-amt" style="color:${dailyWeekend>0?'var(--green)':'var(--danger)'}">${fmtS(dailyWeekend)}</div>
+      <div class="day-amt" style="color:${dailyWeekend>0?'var(--green)':'var(--danger)'}">${fmtS(Math.max(0,dailyWeekend))}</div>
       <div class="day-sub">Thu–Sat per day</div>
     </div>
   `;
