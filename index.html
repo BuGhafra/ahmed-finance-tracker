@@ -9,354 +9,400 @@
 <meta name="theme-color" content="#f5c518">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-<title>VAULT-TEC // FINANCE UNIT</title>
+<title>VAULT-TEC // FINANCE</title>
 <style>
 :root{
   --bg:#0a0800;--surface:#110e00;--surface2:#1a1600;--border:#3d3300;
   --accent:#f5c518;--accent2:#ffdd57;--danger:#ff4444;--warn:#ff8c00;
-  --text:#f0d060;--muted:#7a6a20;--dim:#3a3000;--radius:4px;
-  --glow:0 0 10px rgba(245,197,24,.5);--glow2:0 0 20px rgba(245,197,24,.2);
+  --green:#44ff88;--text:#f0d060;--muted:#7a6a20;--dim:#2a2200;
+  --radius:4px;--glow:0 0 10px rgba(245,197,24,.4);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{
-  background:var(--bg);color:var(--text);
-  font-family:'Share Tech Mono',monospace;
-  min-height:100vh;padding-bottom:130px;
-  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(30,20,0,.3) 2px,rgba(30,20,0,.3) 4px);
+  background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;
+  min-height:100vh;padding-bottom:80px;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(30,20,0,.25) 2px,rgba(30,20,0,.25) 4px);
 }
-body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 1px,rgba(245,197,24,.015) 1px,rgba(245,197,24,.015) 2px)}
-.sync-bar{position:fixed;top:0;left:0;right:0;z-index:999;background:var(--accent);color:#0a0800;font-size:.75rem;font-weight:700;padding:6px 16px;text-align:center;transform:translateY(-100%);transition:transform .3s;font-family:'Orbitron',monospace;letter-spacing:2px;text-transform:uppercase}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 1px,rgba(245,197,24,.01) 1px,rgba(245,197,24,.01) 2px)}
+
+/* SYNC BAR */
+.sync-bar{position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--accent);
+  color:#0a0800;font-size:.7rem;font-weight:700;padding:7px 16px;text-align:center;
+  transform:translateY(-100%);transition:transform .3s;font-family:'Orbitron',monospace;
+  letter-spacing:2px;text-transform:uppercase}
 .sync-bar.show{transform:translateY(0);box-shadow:var(--glow)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
-.nav-btn{flex:1;padding:12px 4px 10px;background:none;border:none;color:var(--muted);font-size:.6rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s;font-family:'Share Tech Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-.nav-btn .nav-icon{font-size:1.3rem}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:2px solid var(--border);display:flex;z-index:200;
+  padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);
+  font-size:.58rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  gap:3px;transition:color .2s;font-family:'Share Tech Mono',monospace;
+  letter-spacing:1px;text-transform:uppercase}
+.nav-btn .ni{font-size:1.2rem}
 .nav-btn.active{color:var(--accent);text-shadow:var(--glow)}
-.page{display:none;padding:0 0 16px}
+
+/* PAGES */
+.page{display:none;padding-bottom:16px}
 .page.active{display:block}
-.page-header{background:var(--surface);border-bottom:2px solid var(--border);padding:14px 16px 12px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
-.page-header h1{font-size:.95rem;font-weight:900;font-family:'Orbitron',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-shadow:var(--glow)}
-.page-header h1 span{color:var(--accent2)}
-.month-nav{display:flex;align-items:center;gap:8px}
-.month-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:2px;padding:4px 10px;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all .2s}
-.month-nav button:hover{box-shadow:var(--glow)}
-#currentMonth,#currentMonth2{font-weight:700;font-size:.75rem;min-width:100px;text-align:center;color:var(--text);letter-spacing:1px}
-.content{padding:12px;display:grid;gap:12px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5}
-.card-title{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:700;font-family:'Orbitron',monospace}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:relative}
-.stat-label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;font-family:'Orbitron',monospace}
-.stat-value{font-size:1.1rem;font-weight:700;font-family:'Orbitron',monospace;letter-spacing:1px}
-.stat-value.green{color:var(--accent);text-shadow:var(--glow)}
-.stat-value.red{color:var(--danger);text-shadow:0 0 10px rgba(255,68,68,.4)}
-.stat-value.purple{color:var(--accent2);text-shadow:0 0 10px rgba(255,221,87,.4)}
-.stat-sub{font-size:.65rem;color:var(--muted);margin-top:4px}
-.progress-bar{height:4px;border-radius:0;background:var(--surface2);overflow:hidden;margin-top:6px;border:1px solid var(--dim)}
-.progress-fill{height:100%;border-radius:0;transition:width .6s ease}
-.cat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--dim)}
-.cat-row:last-child{border-bottom:none;padding-bottom:0}
-.cat-emoji{font-size:1.1rem;width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cat-info{flex:1;min-width:0}.cat-name{font-weight:700;font-size:.82rem}.cat-pct-label{font-size:.65rem;color:var(--muted)}.cat-amount{font-weight:700;font-size:.85rem;white-space:nowrap;font-family:'Orbitron',monospace}
-.donut-wrap{display:flex;align-items:center;gap:14px}.donut-legend{flex:1;display:grid;gap:5px}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:.72rem}.legend-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0}
-.type-toggle{display:flex;gap:8px;margin-bottom:14px}
-.type-btn{flex:1;padding:10px;border-radius:2px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:.8rem;font-weight:700;transition:all .2s;font-family:'Share Tech Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-.type-btn.active-expense{background:rgba(255,68,68,.1);border-color:var(--danger);color:var(--danger);box-shadow:0 0 8px rgba(255,68,68,.2)}
-.type-btn.active-income{background:rgba(245,197,24,.1);border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
-.form-row{margin-bottom:12px}
-.form-row label{font-size:.7rem;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase}
-input,select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:2px;padding:10px 12px;font-size:.9rem;outline:none;font-family:'Share Tech Mono',monospace;transition:border-color .2s;-webkit-appearance:none}
-input:focus,select:focus{border-color:var(--accent);box-shadow:var(--glow)}
-input::placeholder{color:var(--muted)}
-select option{background:var(--surface2);color:var(--text)}
-.submit-btn{width:100%;padding:13px;border-radius:2px;border:2px solid var(--accent);background:rgba(245,197,24,.1);color:var(--accent);font-size:.85rem;font-weight:700;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Orbitron',monospace;letter-spacing:2px;text-transform:uppercase;box-shadow:var(--glow)}
-.submit-btn:active{transform:scale(.98);background:rgba(245,197,24,.2)}
-.tx-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--dim)}
-.tx-item:last-child{border-bottom:none}
-.tx-icon{width:36px;height:36px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:1px solid var(--border)}
-.tx-info{flex:1;min-width:0}.tx-desc{font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tx-meta{font-size:.65rem;color:var(--muted);margin-top:2px}
-.tx-right{text-align:right}.tx-amount{font-weight:700;font-size:.88rem;font-family:'Orbitron',monospace}
-.tx-amount.plus{color:var(--accent);text-shadow:var(--glow)}.tx-amount.minus{color:var(--danger)}
-.tx-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px;display:block;margin-top:2px}
-.auto-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.3);border-radius:2px;padding:4px 10px;font-size:.65rem;color:var(--accent);font-weight:700;margin-bottom:12px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Orbitron',monospace}
-.auto-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--accent)}50%{opacity:.3;box-shadow:none}}
-.goal-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative}
-.goal-title{font-weight:700;font-size:.85rem;margin-bottom:10px;font-family:'Orbitron',monospace;color:var(--accent);letter-spacing:1px}
-.goal-nums{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:6px}
-.goal-nums span:last-child{color:var(--accent);font-weight:700;font-family:'Orbitron',monospace}
-.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:.85rem;letter-spacing:1px}
-.empty .big{font-size:2rem;display:block;margin-bottom:8px}
-.loader{display:flex;justify-content:center;padding:30px}
-.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;box-shadow:var(--glow)}
-@keyframes spin{to{transform:rotate(360deg)}}
-.sms-badge{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.3);border-radius:2px;padding:2px 6px;font-size:.6rem;color:var(--accent);font-weight:700;margin-left:6px}
-.upcoming-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
-.upcoming-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--dim)}
-.upcoming-item:last-child{border-bottom:none}
-.upcoming-check{width:24px;height:24px;border-radius:2px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;cursor:pointer;transition:all .2s}
-.upcoming-check.done{background:rgba(245,197,24,.15);border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
-.upcoming-check.pending{background:transparent;color:transparent}
-.upcoming-info{flex:1}.upcoming-name{font-weight:700;font-size:.85rem}.upcoming-sub{font-size:.65rem;color:var(--muted);margin-top:2px}
-.upcoming-amount{font-weight:700;font-size:.88rem;color:var(--accent);white-space:nowrap;font-family:'Orbitron',monospace;text-shadow:var(--glow)}
-.bill-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--dim);cursor:pointer;transition:opacity .2s}
+.page-header{background:var(--surface);border-bottom:2px solid var(--border);
+  padding:12px 16px;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between}
+.page-header h1{font-size:.85rem;font-weight:900;font-family:'Orbitron',monospace;
+  letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-shadow:var(--glow)}
+.month-nav{display:flex;align-items:center;gap:6px}
+.month-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--accent);
+  border-radius:2px;padding:4px 10px;cursor:pointer;font-family:'Share Tech Mono',monospace;
+  font-size:.8rem;transition:all .2s}
+.month-nav button:active{box-shadow:var(--glow)}
+.mkey{font-size:.72rem;min-width:90px;text-align:center;color:var(--text);letter-spacing:1px}
+
+.wrap{padding:12px;display:grid;gap:10px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.4}
+.card-title{font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;
+  margin-bottom:12px;font-weight:700;font-family:'Orbitron',monospace}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px}
+.stat-lbl{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-family:'Orbitron',monospace}
+.stat-val{font-size:1rem;font-weight:700;font-family:'Orbitron',monospace;letter-spacing:.5px}
+.stat-sub{font-size:.6rem;color:var(--muted);margin-top:2px}
+.c-income{color:var(--accent)}
+.c-danger{color:var(--danger)}
+.c-warn{color:var(--warn)}
+.c-green{color:var(--green)}
+.c-text{color:var(--text)}
+
+/* UPCOMING */
+.up-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--dim)}
+.up-item:last-child{border-bottom:none}
+.up-check{width:26px;height:26px;border-radius:3px;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+  flex-shrink:0;cursor:pointer;transition:all .2s;user-select:none;-webkit-user-select:none}
+.up-check.done{background:rgba(245,197,24,.15);border-color:var(--accent);color:var(--accent)}
+.up-check.pending{background:transparent;color:transparent}
+.up-info{flex:1}
+.up-name{font-weight:700;font-size:.82rem}
+.up-sub{font-size:.62rem;color:var(--muted);margin-top:2px}
+.up-amt{font-weight:700;font-size:.85rem;color:var(--accent);font-family:'Orbitron',monospace}
+.up-row{display:flex;justify-content:space-between;font-size:.7rem;margin-top:10px;
+  padding-top:8px;border-top:1px solid var(--dim);color:var(--muted)}
+
+/* BILLS */
+.bill-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--dim)}
 .bill-item:last-child{border-bottom:none}
-.bill-emoji{width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-.bill-info{flex:1}.bill-name{font-weight:700;font-size:.85rem}.bill-due{font-size:.65rem;color:var(--muted);margin-top:2px}
-.bill-amount{font-weight:700;font-size:.82rem;color:var(--danger);white-space:nowrap;font-family:'Orbitron',monospace}
-.bill-item.paid{opacity:.5}.bill-item.paid .bill-name{text-decoration:line-through}
-.bill-item.paid .bill-amount{color:var(--muted)}
-.bill-due.overdue{color:var(--danger)}.bill-due.soon{color:var(--warn)}
-.save-section{background:var(--surface);border:1px solid rgba(245,197,24,.3);border-radius:var(--radius);padding:14px}
-/* Savings slider */
-.savings-slider-wrap{margin-top:10px}
-.slider-labels{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:6px}
-input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2);border:1px solid var(--border);accent-color:var(--accent)}
-/* Daily limit bar */
-.daily-bar{border-radius:2px;padding:10px 14px;font-size:.75rem;font-family:'Share Tech Mono',monospace;border:1px solid rgba(245,197,24,.2);background:rgba(245,197,24,.05);color:var(--accent);margin-bottom:4px;letter-spacing:.5px}
-.daily-bar.exceeded{background:rgba(255,68,68,.1);border-color:rgba(255,68,68,.4);color:var(--danger)}
-/* Day filter */
-.day-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:58px;z-index:99}
-.day-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:2px;padding:5px 14px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.9rem}
-.day-nav button:disabled{opacity:.3;cursor:default}
-#dayLabel{font-size:.8rem;color:var(--text);font-weight:700;letter-spacing:1px;text-align:center;min-width:120px}
-.day-total{text-align:center;padding:8px 16px;font-size:.75rem;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border)}
-/* Radio bar */
-#radioBar{position:fixed;bottom:65px;left:0;right:0;z-index:300;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;gap:10px;font-family:'Share Tech Mono',monospace}
-.wave-bar{width:3px;background:var(--accent);border-radius:1px;animation:wave .8s ease-in-out infinite}
-@keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.3)}}
-#radioBar.muted .wave-bar{animation:none;opacity:.3}
+.bill-icon{font-size:1.2rem;flex-shrink:0}
+.bill-info{flex:1}
+.bill-name{font-size:.82rem;font-weight:700}
+.bill-due{font-size:.62rem;margin-top:2px}
+.bill-due.overdue{color:var(--danger)}
+.bill-due.today{color:var(--warn)}
+.bill-due.soon{color:var(--accent)}
+.bill-due.paid{color:var(--green)}
+.bill-amt{font-weight:700;font-size:.82rem;font-family:'Orbitron',monospace}
+.bill-amt.paid{color:var(--green);text-decoration:line-through;opacity:.6}
+.bill-tap{font-size:.6rem;padding:3px 8px;border:1px solid var(--border);border-radius:2px;
+  background:none;color:var(--muted);cursor:pointer;font-family:'Share Tech Mono',monospace;
+  white-space:nowrap}
+.bill-tap.mark-paid{border-color:var(--green);color:var(--green)}
+.bill-tap.mark-unpaid{border-color:var(--muted);color:var(--muted)}
+.bills-total{display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;
+  border-top:1px solid var(--dim);font-size:.72rem}
+
+/* SAVINGS SLIDER */
+.sav-row{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:4px}
+.sav-val{font-size:1.1rem;font-weight:700;font-family:'Orbitron',monospace;color:var(--accent);
+  text-align:center;margin-bottom:8px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4px}
+.sav-info{background:var(--dim);border-radius:var(--radius);padding:10px;margin-top:10px;display:grid;gap:6px}
+.sav-line{display:flex;justify-content:space-between;font-size:.72rem}
+.sav-line span:last-child{color:var(--accent);font-family:'Orbitron',monospace;font-weight:700}
+.sav-line span:last-child.danger{color:var(--danger)}
+.sav-line span:last-child.warn{color:var(--warn)}
+.day-box{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.day-card{background:var(--dim);border-radius:var(--radius);padding:10px;text-align:center}
+.day-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-family:'Orbitron',monospace}
+.day-amt{font-size:1rem;font-weight:700;font-family:'Orbitron',monospace;color:var(--green)}
+.day-sub{font-size:.58rem;color:var(--muted);margin-top:2px}
+
+/* TX LOG */
+.tx-date-nav{display:flex;align-items:center;gap:0;background:var(--surface2);
+  border-bottom:1px solid var(--border);padding:8px 12px}
+.tx-date-nav button{background:none;border:none;color:var(--accent);cursor:pointer;
+  font-size:1rem;padding:4px 12px}
+.tx-date-lbl{flex:1;text-align:center;font-size:.75rem;letter-spacing:1px;font-weight:700}
+.tx-summary{display:flex;gap:12px;padding:8px 12px;font-size:.68rem;color:var(--muted);
+  border-bottom:1px solid var(--dim)}
+.tx-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--dim)}
+.tx-icon{width:36px;height:36px;border-radius:4px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-cat{font-size:.62rem;color:var(--muted);margin-top:1px}
+.tx-tag{font-size:.55rem;background:var(--dim);color:var(--muted);padding:1px 5px;
+  border-radius:2px;margin-left:4px}
+.tx-amt{font-weight:700;font-size:.88rem;font-family:'Orbitron',monospace;white-space:nowrap}
+.tx-amt.inc{color:var(--accent)}
+.tx-amt.exp{color:var(--danger)}
+.tx-empty{padding:32px;text-align:center;color:var(--muted);font-size:.75rem}
+
+/* HISTORY CAT */
+.cat-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--dim)}
+.cat-item:last-child{border-bottom:none}
+.cat-bar-wrap{flex:1;height:4px;background:var(--dim);border-radius:2px;overflow:hidden;margin:0 8px}
+.cat-bar{height:100%;border-radius:2px;transition:width .4s}
+.cat-pct{font-size:.65rem;color:var(--muted);min-width:30px;text-align:right}
+.cat-amt{font-size:.78rem;font-family:'Orbitron',monospace;font-weight:700;min-width:80px;text-align:right}
+
+/* DONUT */
+.donut-wrap{position:relative;width:130px;height:130px;margin:0 auto}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;text-align:center}
+.donut-pct{font-size:1.1rem;font-weight:700;font-family:'Orbitron',monospace;color:var(--accent)}
+.donut-lbl{font-size:.55rem;color:var(--muted);margin-top:2px}
+.legend{display:grid;gap:5px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.7rem}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* RADIO */
+.radio-bar{position:fixed;bottom:62px;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--border);padding:6px 14px;display:flex;
+  align-items:center;gap:10px;z-index:150}
+.radio-eq{display:flex;align-items:flex-end;gap:2px;height:16px}
+.radio-eq span{width:3px;background:var(--accent);border-radius:1px;animation:eq 0.8s ease-in-out infinite alternate}
+.radio-eq span:nth-child(2){animation-delay:.2s;animation-duration:.6s}
+.radio-eq span:nth-child(3){animation-delay:.4s;animation-duration:1s}
+@keyframes eq{0%{height:3px}100%{height:14px}}
+.radio-eq.paused span{animation-play-state:paused;height:4px}
+.radio-info{flex:1;font-size:.65rem}
+.radio-title{color:var(--muted);font-size:.55rem;text-transform:uppercase;letter-spacing:1px}
+.radio-song{color:var(--text);margin-top:1px}
+.radio-btn{background:var(--surface2);border:1px solid var(--border);color:var(--accent);
+  padding:5px 14px;border-radius:2px;cursor:pointer;font-size:.65rem;
+  font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.radio-btn:active{box-shadow:var(--glow)}
+
+/* ADD TX MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
+  display:none;align-items:flex-end}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-top:2px solid var(--accent);
+  width:100%;padding:20px 16px 32px;border-radius:8px 8px 0 0;max-height:85vh;overflow-y:auto}
+.modal-title{font-family:'Orbitron',monospace;font-size:.8rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.type-btn{padding:8px;border:1px solid var(--border);background:none;color:var(--muted);
+  border-radius:var(--radius);cursor:pointer;font-family:'Share Tech Mono',monospace;
+  font-size:.75rem;transition:all .2s}
+.type-btn.active.exp{border-color:var(--danger);color:var(--danger);background:rgba(255,68,68,.1)}
+.type-btn.active.inc{border-color:var(--accent);color:var(--accent);background:rgba(245,197,24,.1)}
+.form-group{margin-bottom:12px}
+.form-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:5px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:10px 12px;border-radius:var(--radius);
+  font-family:'Share Tech Mono',monospace;font-size:.88rem;outline:none}
+.form-input:focus{border-color:var(--accent);box-shadow:var(--glow)}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cat-btn{padding:7px 4px;border:1px solid var(--border);background:none;color:var(--muted);
+  border-radius:var(--radius);cursor:pointer;font-size:.62rem;text-align:center;
+  font-family:'Share Tech Mono',monospace;transition:all .2s}
+.cat-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(245,197,24,.08)}
+.submit-btn{width:100%;padding:13px;background:var(--accent);color:#0a0800;border:none;
+  border-radius:var(--radius);cursor:pointer;font-family:'Orbitron',monospace;
+  font-size:.8rem;font-weight:700;letter-spacing:2px;margin-top:4px}
+.submit-btn:active{opacity:.85}
+.modal-close{float:right;background:none;border:none;color:var(--muted);
+  font-size:1.2rem;cursor:pointer;padding:0 4px}
+
+/* FAB */
+.fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#0a0800;border:none;font-size:1.6rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:300;
+  box-shadow:var(--glow);transition:transform .15s}
+.fab:active{transform:scale(.92)}
+
+/* UPLINK BADGE */
+.uplink{font-size:.62rem;padding:5px 10px;border-radius:2px;border:1px solid var(--border);
+  color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.uplink-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);
+  animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
-<div class="sync-bar" id="syncBar">// TRANSACTION LOGGED — VAULT-TEC CONFIRMED</div>
 
-<!-- RADIO -->
-<div id="radioBar">
-  <div id="radioWave" style="display:flex;align-items:center;gap:2px;width:20px">
-    <div class="wave-bar" style="height:8px;animation-delay:0s"></div>
-    <div class="wave-bar" style="height:14px;animation-delay:.15s"></div>
-    <div class="wave-bar" style="height:10px;animation-delay:.3s"></div>
-    <div class="wave-bar" style="height:6px;animation-delay:.45s"></div>
-  </div>
-  <div style="flex:1;min-width:0">
-    <div style="font-size:.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase">// APPALACHIAN RADIO</div>
-    <div id="radioTitle" style="font-size:.72rem;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--glow)">SIGNAL ACQUIRING...</div>
-  </div>
-  <button id="radioBtn" onclick="toggleRadio()" style="background:rgba(245,197,24,.1);border:1px solid var(--accent);color:var(--accent);border-radius:2px;padding:5px 10px;font-family:'Share Tech Mono',monospace;font-size:.7rem;cursor:pointer;letter-spacing:1px;white-space:nowrap">▶ PLAY</button>
-</div>
-<audio id="radioAudio" loop><source src="radio.mp3.mp3" type="audio/mpeg"></audio>
+<div class="sync-bar" id="syncBar">// NEW TRANSACTION DETECTED</div>
 
-<!-- HOME -->
+<!-- PAGES -->
 <div class="page active" id="page-home">
   <div class="page-header">
     <h1>☢ VAULT-TEC // <span>FINANCE</span></h1>
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">◄</button>
-      <span id="currentMonth"></span>
-      <button onclick="changeMonth(1)">►</button>
+      <button onclick="changeMonth(-1)">◀</button>
+      <span class="mkey" id="mkey1"></span>
+      <button onclick="changeMonth(1)">▶</button>
     </div>
   </div>
-  <div class="content">
-    <div class="auto-badge"><span class="dot"></span> UPLINK ACTIVE // BANK MUSCAT FEED</div>
-    <div id="dailyLimitBar" class="daily-bar" style="display:none"></div>
-    <div class="summary-grid">
-      <div class="stat-card"><div class="stat-label">Income</div><div class="stat-value green" id="h-income">OMR 0</div><div class="stat-sub">This month</div></div>
-      <div class="stat-card"><div class="stat-label">Spent</div><div class="stat-value red" id="h-spent">OMR 0</div><div class="stat-sub">This month</div></div>
-      <div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value green" id="h-saved">OMR 0</div><div class="stat-sub" id="h-saved-pct">No goal set</div><div class="progress-bar"><div class="progress-fill" id="h-save-bar" style="width:0%;background:var(--accent)"></div></div></div>
-      <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value purple" id="h-balance">OMR 0</div><div class="stat-sub">All accounts</div></div>
+  <div class="wrap">
+    <div class="uplink" id="uplinkBadge"><span class="uplink-dot"></span>UPLINK ACTIVE // BANK MUSCAT FEED</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-lbl">Balance</div><div class="stat-val c-income" id="h-balance">--</div><div class="stat-sub">All accounts</div></div>
+      <div class="stat"><div class="stat-lbl">Spent</div><div class="stat-val c-danger" id="h-spent">--</div><div class="stat-sub">This month</div></div>
+      <div class="stat"><div class="stat-lbl">Income</div><div class="stat-val c-text" id="h-income">--</div><div class="stat-sub">This month</div></div>
+      <div class="stat"><div class="stat-lbl">Saved</div><div class="stat-val c-income" id="h-saved">--</div><div class="stat-sub" id="h-saved-sub">No goal set</div></div>
     </div>
-    <div class="upcoming-card"><div class="card-title">📥 Upcoming Income</div><div id="upcomingList"></div></div>
-    <div class="card"><div class="card-title">🔁 Recurring Bills</div><div id="billList"></div></div>
-    <div class="save-section">
-      <div class="card-title">💰 Savings This Month</div>
-      <div class="savings-slider-wrap">
-        <div class="slider-labels">
-          <span>300 OMR</span>
-          <span id="savingsSliderVal" style="color:var(--accent);font-weight:700;font-family:'Orbitron',monospace">300 OMR</span>
-          <span>400 OMR</span>
-        </div>
-        <input type="range" id="savingsSlider" min="300" max="400" step="50" value="300" style="width:100%" oninput="onSavingsSlide()">
-        <div id="savingsImpact" style="margin-top:8px;font-size:.7rem;color:var(--muted);line-height:1.6"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-        <input type="number" id="saveAmount" placeholder="Amount (OMR)" style="flex:1;padding:9px 12px;font-size:.9rem" inputmode="decimal">
-        <button onclick="moveToSavings()" style="background:rgba(245,197,24,.15);border:1px solid var(--accent);color:var(--accent);border-radius:2px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:'Orbitron',monospace;font-size:.7rem;white-space:nowrap">MOVE</button>
-      </div>
-    </div>
-    <div class="goal-banner">
-      <div class="goal-title">🎯 Savings Goal</div>
-      <div class="goal-nums"><span id="g-saved-label">Saved: OMR 0</span><span id="g-goal-label">Goal: not set</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="g-bar" style="width:0%;background:var(--accent)"></div></div>
-    </div>
-    <div class="card"><div class="card-title">📂 Spending by Category</div><div id="catList"></div></div>
+
+    <!-- UPCOMING INCOME -->
     <div class="card">
-      <div class="card-title">🍩 Spending Breakdown</div>
-      <div class="donut-wrap">
-        <svg width="110" height="110" viewBox="0 0 110 110" id="donutSvg"><circle cx="55" cy="55" r="40" fill="none" stroke="#1a1600" stroke-width="18"/></svg>
-        <div class="donut-legend" id="donutLegend"></div>
-      </div>
+      <div class="card-title">📥 Upcoming Income</div>
+      <div id="upcomingList"></div>
+    </div>
+
+    <!-- RECURRING BILLS -->
+    <div class="card">
+      <div class="card-title">🔁 Recurring Bills</div>
+      <div id="billsList"></div>
+    </div>
+
+    <!-- SAVINGS PLANNER -->
+    <div class="card">
+      <div class="card-title">💰 Savings Planner</div>
+      <div class="sav-row"><span>300 OMR</span><span>400 OMR</span></div>
+      <div class="sav-val" id="savVal">300 OMR</div>
+      <input type="range" id="savSlider" min="300" max="400" step="10" value="300" oninput="onSavSlider()">
+      <div class="sav-info" id="savInfo"></div>
+      <div class="day-box" id="dayBox"></div>
     </div>
   </div>
 </div>
 
-<!-- HISTORY -->
 <div class="page" id="page-tx">
   <div class="page-header">
-    <h1>// TRANSACTION <span>LOG</span></h1>
+    <h1>// TRANSACTION LOG</h1>
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">◄</button>
-      <span id="currentMonth2"></span>
-      <button onclick="changeMonth(1)">►</button>
+      <button onclick="changeMonth(-1)">◀</button>
+      <span class="mkey" id="mkey2"></span>
+      <button onclick="changeMonth(1)">▶</button>
     </div>
   </div>
-  <div class="day-nav">
-    <button id="dayPrev" onclick="changeDay(-1)">◄</button>
-    <span id="dayLabel">TODAY</span>
-    <button id="dayNext" onclick="changeDay(1)" disabled>►</button>
+  <div class="tx-date-nav">
+    <button onclick="changeDay(-1)">◀</button>
+    <div class="tx-date-lbl" id="dayLabel">TODAY</div>
+    <button onclick="changeDay(1)">▶</button>
   </div>
-  <div class="day-total" id="dayTotal"></div>
-  <div style="padding:8px 12px"><div class="card" style="padding:4px 16px"><div id="txList"></div></div></div>
+  <div class="tx-summary" id="txSummary"></div>
+  <div id="txList"></div>
 </div>
 
-<!-- ADD -->
-<div class="page" id="page-add">
-  <div class="page-header" style="justify-content:center"><h1>// LOG <span>NEW ENTRY</span></h1></div>
-  <div class="content">
+<div class="page" id="page-history">
+  <div class="page-header">
+    <h1>// HISTORY</h1>
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">◀</button>
+      <span class="mkey" id="mkey3"></span>
+      <button onclick="changeMonth(1)">▶</button>
+    </div>
+  </div>
+  <div class="wrap">
     <div class="card">
-      <div class="type-toggle">
-        <button class="type-btn active-expense" id="btnExp" onclick="setType('expense')">💸 EXPENSE</button>
-        <button class="type-btn" id="btnInc" onclick="setType('income')">💵 INCOME</button>
-      </div>
-      <div class="form-row"><label>Description</label><input type="text" id="addDesc" placeholder="e.g. McDonald's, Fuel..."></div>
-      <div class="form-row"><label>Amount (OMR)</label><input type="number" id="addAmount" placeholder="0.000" min="0" step="0.001" inputmode="decimal"></div>
-      <div class="form-row">
-        <label>Category</label>
-        <select id="addCategory">
-          <option value="food">🍔 Food & Drinks</option>
-          <option value="gaming">🎮 Gaming</option>
-          <option value="transport">🚗 Car & Transport</option>
-          <option value="social">👥 Hanging Out / Social</option>
-          <option value="bills">💡 Bills & Subscriptions</option>
-          <option value="saving">💰 Savings</option>
-          <option value="personal">✂️ Personal Care</option>
-          <option value="loans">🏦 Loan Payment</option>
-          <option value="other">📦 Other</option>
-        </select>
-      </div>
-      <div class="form-row"><label>Date</label><input type="date" id="addDate"></div>
-      <button class="submit-btn" onclick="addTx()">✓ LOG TRANSACTION</button>
+      <div class="card-title">📊 Spending Breakdown</div>
+      <div class="donut-wrap"><svg width="130" height="130" viewBox="0 0 130 130" id="donutSvg"></svg><div class="donut-center"><div class="donut-pct" id="donutPct">0%</div><div class="donut-lbl">TOP CAT</div></div></div>
+      <div class="legend" id="donutLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📂 By Category</div>
+      <div id="catList"></div>
     </div>
   </div>
 </div>
 
+<!-- NAV -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" id="nav-home" onclick="goTo('home')"><span class="nav-icon">☢</span><span>VAULT</span></button>
-  <button class="nav-btn" id="nav-add" onclick="goTo('add')"><span class="nav-icon">⊕</span><span>LOG</span></button>
-  <button class="nav-btn" id="nav-tx" onclick="goTo('tx')"><span class="nav-icon">▤</span><span>HISTORY</span></button>
+  <button class="nav-btn active" id="nav-home" onclick="goTo('home')"><span class="ni">☢</span>VAULT</button>
+  <button class="nav-btn" id="nav-tx" onclick="goTo('tx')"><span class="ni">⊕</span>LOG</button>
+  <button class="nav-btn" id="nav-history" onclick="goTo('history')"><span class="ni">≡</span>HISTORY</button>
 </nav>
 
+<!-- RADIO -->
+<div class="radio-bar">
+  <div class="radio-eq" id="radioEq"><span></span><span></span><span></span></div>
+  <div class="radio-info">
+    <div class="radio-title">// APPALACHIAN RADIO</div>
+    <div class="radio-song" id="radioSong">Mr. Sandman — The Chordettes</div>
+  </div>
+  <button class="radio-btn" id="radioBtn" onclick="toggleRadio()">PLAY</button>
+</div>
+<audio id="radioAudio" loop src="radio.mp3.mp3"></audio>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()">+</button>
+
+<!-- ADD TX MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div><span class="modal-title">// ADD TRANSACTION</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="type-toggle">
+      <button class="type-btn active exp" id="btnExp" onclick="setType('expense')">— EXPENSE</button>
+      <button class="type-btn inc" id="btnInc" onclick="setType('income')">+ INCOME</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (OMR)</label>
+      <input class="form-input" id="txAmt" type="number" step="0.001" min="0" placeholder="0.000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="txDesc" type="text" placeholder="What was this?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input class="form-input" id="txDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+    <button class="submit-btn" onclick="addTx()">ADD TRANSACTION</button>
+  </div>
+</div>
+
 <script>
-// Force wipe all old data
-(function(){ for(let i=0;i<=18;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
+// ── CONSTANTS ────────────────────────────────────────────────
+const VERSION = 'vaultV1';
+const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
+const SALARY = 736;
 
-const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
-const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV19';
-
-// Daily limits — active from June 2026 onwards
-const DAILY_LIMITS = { weekday: 5, weekend: 12 };
-
-const MERCHANT_MEMORY = {
-  'muha':        { category:'personal', label:'Barbershop' },
-  'msakham':     { category:'food',     label:'MSAKHAM QURUM' },
-  'mena foods':  { category:'food',     label:'MENA Foods' },
-  'world shoes': { category:'social',   label:'World Shoes' },
-  'abu mazin':   { category:'food',     label:'ABU MAZIN' },
-  'oman oil':    { category:'transport',label:'Oman Oil Petrol' },
-  'lulu':        { category:'food',     label:'LuLu Hypermarket' },
-  'carrefour':   { category:'food',     label:'Carrefour' },
-  'mcdonald':    { category:'food',     label:"McDonald's" },
-  'kfc':         { category:'food',     label:'KFC' },
-  'shell':       { category:'transport',label:'Shell Petrol' },
-  'vodafone':    { category:'bills',    label:'Vodafone' },
-};
-
-function merchantLookup(desc) {
-  const d=(desc||'').toLowerCase();
-  for(const [k,v] of Object.entries(MERCHANT_MEMORY)) if(d.includes(k)) return v;
-  return null;
-}
-
-const UPCOMING_TEMPLATES = [
-  { id:'up_rashid',  label:'Rashid Mohamed', note:'Monthly transfer', amount:200.000, matchSender:'rashid', matchAmount:200 },
-  { id:'up_suhaib',  label:'Suhaib Ali',     note:'Monthly transfer', amount:25.000,  matchSender:'suhaib', matchAmount:25 },
-  { id:'up_unknown', label:'Unknown Person', note:'Tap to mark received', amount:25.000, matchSender:null, matchAmount:25, manual:true },
+const BILLS = [
+  { id:'b_loan1',   emoji:'🏦', name:'Loan Payment 1',  amount:255.893, day:20, cat:'loans',   autoDeduct:true },
+  { id:'b_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:20, cat:'loans',   autoDeduct:true },
+  { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:36.300,  day:20, cat:'other' },
+  { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  cat:'bills' },
+  { id:'b_wifi',    emoji:'📶', name:'WiFi',            amount:12.600,  day:1,  cat:'bills' },
+  { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.846,   day:17, cat:'bills' },
+  { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.381,   day:1,  cat:'bills' },
+  { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.691,   day:23, cat:'bills' },
+  { id:'b_tod',     emoji:'📺', name:'TOD 4K',          amount:10.395,  day:28, cat:'bills' },
+  { id:'b_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:7.700,   day:2,  cat:'bills',   startsMonth:'2026-06' },
+  { id:'b_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,   day:25, cat:'bills' },
 ];
 
-const BILL_TEMPLATES = [
-  { id:'bill_loan1',   emoji:'🏦', name:'Loan Payment 1',  amount:255.893, day:25, category:'loans' },
-  { id:'bill_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:25, category:'loans' },
-  { id:'bill_amur',    emoji:'💸', name:'AMUR Transfer',   amount:31.000,  day:10, category:'other' },
-  { id:'bill_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  category:'bills' },
-  { id:'bill_wifi',    emoji:'📶', name:'WiFi (net)',      amount:12.600,  day:1,  category:'bills' },
-  { id:'bill_discord', emoji:'🎮', name:'Discord Nitro',   amount:+(9.99*USD_TO_OMR).toFixed(3),  day:17, category:'bills' },
-  { id:'bill_icloud',  emoji:'☁️', name:'iCloud+',        amount:+(0.99*USD_TO_OMR).toFixed(3),  day:1,  category:'bills' },
-  { id:'bill_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:+(6.99*USD_TO_OMR).toFixed(3),  day:23, category:'bills' },
-  { id:'bill_tod',     emoji:'📺', name:'TOD 4K',          amount:+(27*USD_TO_OMR).toFixed(3),    day:28, category:'bills' },
-  { id:'bill_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:+(20*USD_TO_OMR).toFixed(3),    day:2,  category:'bills' },
-  { id:'bill_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,                                  day:25, category:'gaming' },
-];
-
-const MAY_SEED = [
-  // ── May 20 ──────────────────────────────────────────────────
-  { id:'seed_s0',  type:'income',  desc:'Opening Balance',        amount:2.418,   category:'income',    date:'2026-05-20', source:'seed' },
-  { id:'seed_s1',  type:'income',  desc:'Received from Shamsa',   amount:5.000,   category:'income',    date:'2026-05-20', source:'seed' },
-  { id:'seed_1',   type:'expense', desc:'Oman Oil Petrol',        amount:3.000,   category:'transport', date:'2026-05-20', source:'seed' },
-  { id:'seed_2',   type:'income',  desc:'Salary',                 amount:736.000, category:'income',    date:'2026-05-20', source:'seed' },
-  { id:'seed_3',   type:'expense', desc:'Loan Payment 1',         amount:255.893, category:'loans',     date:'2026-05-20', source:'seed' },
-  { id:'seed_4',   type:'expense', desc:'Loan Payment 2',         amount:97.081,  category:'loans',     date:'2026-05-20', source:'seed' },
-  { id:'seed_5',   type:'expense', desc:'AMUR Transfer',          amount:36.300,  category:'other',     date:'2026-05-20', source:'seed' },
-  { id:'seed_6',   type:'expense', desc:'MSAKHAM QURUM',          amount:2.520,   category:'food',      date:'2026-05-20', source:'seed' },
-  { id:'seed_sa',  type:'expense', desc:'Savings Transfer',       amount:1.000,   category:'other',     date:'2026-05-20', source:'seed' },
-  // ── May 21 ──────────────────────────────────────────────────
-  { id:'seed_7',   type:'income',  desc:'Received from Shamsa',   amount:3.000,   category:'income',    date:'2026-05-21', source:'seed' },
-  { id:'seed_8',   type:'expense', desc:'World Shoes',            amount:20.800,  category:'social',    date:'2026-05-21', source:'seed' },
-  { id:'seed_9',   type:'expense', desc:'MENA Foods',             amount:4.000,   category:'food',      date:'2026-05-21', source:'seed' },
-  { id:'seed_10',  type:'expense', desc:'Barbershop',             amount:1.000,   category:'personal',  date:'2026-05-21', source:'seed' },
-  // ── May 22 ──────────────────────────────────────────────────
-  { id:'seed_sb',  type:'expense', desc:'Savings Transfer',       amount:1.000,   category:'other',     date:'2026-05-22', source:'seed' },
-  { id:'seed_11',  type:'expense', desc:'ABU MAZIN AL SUBHI',     amount:0.800,   category:'food',      date:'2026-05-22', source:'seed' },
-  { id:'seed_12',  type:'expense', desc:'WADH (Perfume)',         amount:2.400,   category:'social',    date:'2026-05-22', source:'seed' },
-  { id:'seed_13',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:1.680,   category:'food',      date:'2026-05-22', source:'seed' },
-  // ── May 23 ──────────────────────────────────────────────────
-  { id:'seed_14',  type:'expense', desc:'WADH',                   amount:17.400,  category:'social',    date:'2026-05-23', source:'seed' },
-  { id:'seed_15',  type:'income',  desc:'Received from Rashid',   amount:200.000, category:'income',    date:'2026-05-23', source:'seed' },
-  { id:'seed_16',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.780,   category:'food',      date:'2026-05-23', source:'seed' },
-  { id:'seed_17',  type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.570,   category:'food',      date:'2026-05-23', source:'seed' },
-  { id:'seed_18',  type:'expense', desc:'Talabat',                amount:2.590,   category:'food',      date:'2026-05-23', source:'seed' },
-  // ── May 24 ──────────────────────────────────────────────────
-  { id:'seed_19',  type:'expense', desc:'Gift to Brother',        amount:10.000,  category:'social',    date:'2026-05-24', source:'seed' },
-  { id:'seed_20',  type:'income',  desc:'Received from Shamsa',   amount:42.000,  category:'income',    date:'2026-05-24', source:'seed' },
-  { id:'seed_21',  type:'expense', desc:'AL AMIRA Restaurant',    amount:3.385,   category:'food',      date:'2026-05-24', source:'seed' },
-  // ── May 25 ──────────────────────────────────────────────────
-  { id:'seed_22',  type:'expense', desc:'Loan to Father',         amount:50.000,  category:'other',     date:'2026-05-25', source:'seed' },
-  { id:'seed_23',  type:'expense', desc:'Microsoft Game Pass',    amount:3.500,   category:'bills',     date:'2026-05-25', source:'seed' },
-  { id:'seed_24',  type:'expense', desc:'eToro Investment',       amount:300.000, category:'saving',    date:'2026-05-25', source:'seed' },
-  { id:'seed_25',  type:'expense', desc:'World Shoes (2nd pair)', amount:28.000,  category:'social',    date:'2026-05-25', source:'seed' },
-  { id:'seed_26',  type:'expense', desc:'Barbershop',             amount:4.500,   category:'personal',  date:'2026-05-25', source:'seed' },
-  { id:'seed_27',  type:'expense', desc:'SAFWA ALMAABILA',        amount:0.250,   category:'other',     date:'2026-05-25', source:'seed' },
-  { id:'seed_28',  type:'expense', desc:'Apple.com/iTunes',       amount:2.768,   category:'bills',     date:'2026-05-25', source:'seed' },
-  // Loan 255.893 auto-debited from savings account (0022) - does not affect main balance
-  { id:'seed_29',  type:'income',  desc:'Received from Suhaib',   amount:25.000,  category:'income',    date:'2026-05-25', source:'seed' },
-  // ── May 26 ──────────────────────────────────────────────────
-  { id:'seed_30',  type:'expense', desc:'AL NOKHODA SMOKING',     amount:2.500,   category:'other',     date:'2026-05-26', source:'seed' },
+const UPCOMING = [
+  { id:'u_rashid',  label:'Rashid Mohamed', note:'Monthly transfer', amount:200, matchSender:'rashid' },
+  { id:'u_suhaib',  label:'Suhaib Ali',     note:'Monthly transfer', amount:25,  matchSender:'suhaib' },
+  { id:'u_unknown', label:'Unknown Person', note:'Tap to mark received', amount:25, manual:true },
 ];
 
 const CATS = {
   food:      { label:'Food & Drinks',   emoji:'🍔', color:'#ff8c00' },
-  gaming:    { label:'Gaming',          emoji:'🎮', color:'#f5c518' },
   transport: { label:'Car & Transport', emoji:'🚗', color:'#ffd700' },
   social:    { label:'Hanging Out',     emoji:'👥', color:'#ffaa00' },
   bills:     { label:'Bills & Subs',    emoji:'💡', color:'#ff6600' },
@@ -365,397 +411,635 @@ const CATS = {
   loans:     { label:'Loan Payment',    emoji:'🏦', color:'#cc8800' },
   other:     { label:'Other',           emoji:'📦', color:'#8a7a30' },
   income:    { label:'Income',          emoji:'💵', color:'#f5c518' },
+  gaming:    { label:'Gaming',          emoji:'🎮', color:'#f5c518' },
 };
 
-let currentDate = new Date();
+// ── SEED DATA (full verified history from SMS) ───────────────
+const SEEDS = [
+  { id:'s0',  type:'income',  desc:'Opening Balance',        amount:2.418,   cat:'income',    date:'2026-05-20' },
+  { id:'s1',  type:'income',  desc:'Received from Shamsa',   amount:5.000,   cat:'income',    date:'2026-05-20' },
+  { id:'s2',  type:'expense', desc:'Oman Oil Petrol',        amount:3.000,   cat:'transport', date:'2026-05-20' },
+  { id:'s3',  type:'income',  desc:'Salary',                 amount:736.000, cat:'income',    date:'2026-05-20' },
+  { id:'s4',  type:'expense', desc:'Loan Payment 1',         amount:255.893, cat:'loans',     date:'2026-05-20' },
+  { id:'s5',  type:'expense', desc:'Loan Payment 2',         amount:97.081,  cat:'loans',     date:'2026-05-20' },
+  { id:'s6',  type:'expense', desc:'AMUR Transfer',          amount:36.300,  cat:'other',     date:'2026-05-20' },
+  { id:'s7',  type:'expense', desc:'MSAKHAM QURUM',          amount:2.520,   cat:'food',      date:'2026-05-20' },
+  { id:'s8',  type:'expense', desc:'Savings Transfer',       amount:1.000,   cat:'other',     date:'2026-05-20' },
+  { id:'s9',  type:'income',  desc:'Received from Shamsa',   amount:3.000,   cat:'income',    date:'2026-05-21' },
+  { id:'s10', type:'expense', desc:'World Shoes',            amount:20.800,  cat:'social',    date:'2026-05-21' },
+  { id:'s11', type:'expense', desc:'MENA Foods',             amount:4.000,   cat:'food',      date:'2026-05-21' },
+  { id:'s12', type:'expense', desc:'Barbershop',             amount:1.000,   cat:'personal',  date:'2026-05-21' },
+  { id:'s13', type:'expense', desc:'Savings Transfer',       amount:1.000,   cat:'other',     date:'2026-05-22' },
+  { id:'s14', type:'expense', desc:'ABU MAZIN AL SUBHI',     amount:0.800,   cat:'food',      date:'2026-05-22' },
+  { id:'s15', type:'expense', desc:'WADH Perfume',           amount:2.400,   cat:'social',    date:'2026-05-22' },
+  { id:'s16', type:'expense', desc:'HYPERMAX MUSCAT',        amount:1.680,   cat:'food',      date:'2026-05-22' },
+  { id:'s17', type:'expense', desc:'WADH',                   amount:17.400,  cat:'social',    date:'2026-05-23' },
+  { id:'s18', type:'income',  desc:'Received from Rashid',   amount:200.000, cat:'income',    date:'2026-05-23' },
+  { id:'s19', type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.780,   cat:'food',      date:'2026-05-23' },
+  { id:'s20', type:'expense', desc:'HYPERMAX MUSCAT',        amount:0.570,   cat:'food',      date:'2026-05-23' },
+  { id:'s21', type:'expense', desc:'Talabat',                amount:2.590,   cat:'food',      date:'2026-05-23' },
+  { id:'s22', type:'expense', desc:'Gift to Brother',        amount:10.000,  cat:'social',    date:'2026-05-24' },
+  { id:'s23', type:'income',  desc:'Received from Shamsa',   amount:42.000,  cat:'income',    date:'2026-05-24' },
+  { id:'s24', type:'expense', desc:'AL AMIRA Restaurant',    amount:3.385,   cat:'food',      date:'2026-05-24' },
+  { id:'s25', type:'expense', desc:'Loan to Father',         amount:50.000,  cat:'other',     date:'2026-05-25' },
+  { id:'s26', type:'expense', desc:'Microsoft Game Pass',    amount:3.500,   cat:'bills',     date:'2026-05-25' },
+  { id:'s27', type:'expense', desc:'eToro Investment',       amount:300.000, cat:'saving',    date:'2026-05-25' },
+  { id:'s28', type:'expense', desc:'World Shoes (2nd pair)', amount:28.000,  cat:'social',    date:'2026-05-25' },
+  { id:'s29', type:'expense', desc:'Barbershop',             amount:4.500,   cat:'personal',  date:'2026-05-25' },
+  { id:'s30', type:'expense', desc:'SAFWA ALMAABILA',        amount:0.250,   cat:'other',     date:'2026-05-25' },
+  { id:'s31', type:'expense', desc:'Apple.com/iTunes',       amount:2.768,   cat:'bills',     date:'2026-05-25' },
+  { id:'s32', type:'income',  desc:'Received from Suhaib',   amount:25.000,  cat:'income',    date:'2026-05-25' },
+  { id:'s33', type:'expense', desc:'AL NOKHODA SMOKING',     amount:2.500,   cat:'other',     date:'2026-05-26' },
+];
+
+// ── STATE ────────────────────────────────────────────────────
+let curDate = new Date();
 let viewDate = new Date();
+let allTxs = [];
 let txType = 'expense';
-let allTransactions = [];
-let lastSMSCount = 0;
+let selCat = 'other';
+let lastFirebaseCount = 0;
 
-function monthKey(d){ d=d||currentDate; return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
-function monthTxs(){ const k=monthKey(); return allTransactions.filter(t=>t.date&&t.date.startsWith(k)); }
-function fmt(n){ return 'OMR '+Number(n).toFixed(3); }
-function fmtS(n){ return 'OMR '+Number(n).toFixed(2); }
-function loadLocal(){ return JSON.parse(localStorage.getItem(CURRENT_VERSION)||'{"transactions":[],"goals":{},"upcoming":{},"bills":{},"savings":{}}'); }
-function saveLocal(d){ localStorage.setItem(CURRENT_VERSION,JSON.stringify(d)); }
+// ── STORAGE ─────────────────────────────────────────────────
+function load() {
+  const def = { txs:[], bills:{}, upcoming:{}, savings:{} };
+  try { return JSON.parse(localStorage.getItem(VERSION)) || def; }
+  catch(e) { return def; }
+}
+function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 
-function initSeed(){
-  const d=loadLocal();
-  if(!d.transactions.some(t=>t.id==='seed_1')){
-    d.transactions=[...MAY_SEED,...d.transactions];
-    // Mark already-paid bills for May 2026
-    d.bills=d.bills||{};
-    d.bills['2026-05']=d.bills['2026-05']||{};
-    d.bills['2026-05']['bill_loan1']=true;   // Loan 1 paid (auto-deducted May 20)
-    d.bills['2026-05']['bill_loan2']=true;   // Loan 2 paid (auto-deducted May 20)
-    d.bills['2026-05']['bill_amur']=true;    // AMUR paid May 20 (36.3)
-    d.bills['2026-05']['bill_xbox']=true;    // Xbox Game Pass paid May 25
-    d.bills['2026-05']['bill_ytmusic']=true; // YouTube Music paid May 25 (via Apple)
-    d.bills['2026-05']['bill_icloud']=true;  // iCloud+ paid (via Apple May 25)
-    // Mark Rashid as received (already in seeds May 23)
-    d.upcoming=d.upcoming||{};
-    d.upcoming['2026-05']=d.upcoming['2026-05']||{};
-    d.upcoming['2026-05']['up_rashid']=true;
-    d.upcoming['2026-05']['up_suhaib']=true; // Suhaib received May 25
-    saveLocal(d);
-  }
+function wipeOld() {
+  const old = ['ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
+    'ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7','ahmedFinanceV8','ahmedFinanceV9',
+    'ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12','ahmedFinanceV13','ahmedFinanceV14',
+    'ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17','ahmedFinanceV18','ahmedFinanceV19'];
+  old.forEach(k => localStorage.removeItem(k));
 }
 
-function parseSMS(raw,id,timestamp){
-  if(!raw||raw==='[Shortcuts Input]') return null;
-  let tx={id,source:'sms'};
-  try{
-    const parts=String(timestamp).replace(' at ',' ').split(' ');
-    const months={January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
-    const day=parseInt(parts[0]),month=months[parts[1]],year=parseInt(parts[2]);
-    tx.date=(!isNaN(day)&&month!==undefined&&!isNaN(year))?year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0'):new Date().toISOString().split('T')[0];
-  }catch(e){tx.date=new Date().toISOString().split('T')[0];}
-  let m=raw.match(/used for OMR ([\d.]+) at (.+?) on/);
-  if(m){tx.type='expense';tx.amount=parseFloat(m[1]);const mem=merchantLookup(m[2]);tx.desc=mem?mem.label:m[2].trim();tx.category=mem?mem.category:guessCategory(m[2]);return tx;}
-  m=raw.match(/You have sent OMR ([\d.]+) to (.+?) from/);
-  if(m){const mem=merchantLookup(m[2]);tx.type='expense';tx.amount=parseFloat(m[1]);tx.desc=mem?mem.label:'Sent to '+m[2].trim();tx.category=mem?mem.category:'other';return tx;}
-  m=raw.match(/OMR ([\d.]+) is debited from your A\/C (.+?) and credited to your A\/C (.+?) on/);
-  if(m){
-    const from=m[2].trim(),to=m[3].trim();
-    if(from.includes('0014')&&to.includes('0022')) return null; // own savings transfer out
-    if(from.includes('0022')&&to.includes('0014')) return null; // own savings transfer in
-    tx.type='expense';tx.amount=parseFloat(m[1]);tx.desc='Account Transfer';tx.category='other';return tx;
+// ── INIT SEEDS ───────────────────────────────────────────────
+function initSeeds() {
+  const d = load();
+  // Check if seeds already loaded
+  if (d.txs.some(t => t.id === 's0')) return;
+  // Add all seeds
+  d.txs = [...SEEDS, ...d.txs];
+  // Pre-mark May 2026 bills as paid based on confirmed payments
+  d.bills['2026-05'] = d.bills['2026-05'] || {};
+  d.bills['2026-05']['b_loan1']   = true;
+  d.bills['2026-05']['b_loan2']   = true;
+  d.bills['2026-05']['b_ytmusic'] = true;
+  d.bills['2026-05']['b_xbox']    = true;
+  d.bills['2026-05']['b_amur']    = true; // AMUR was in seeds May 20
+  // Pre-mark upcoming income received in May
+  d.upcoming['2026-05'] = d.upcoming['2026-05'] || {};
+  d.upcoming['2026-05']['u_rashid'] = true;
+  d.upcoming['2026-05']['u_suhaib'] = true;
+  save(d);
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function mk(d) { d=d||curDate; return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function fmt(n) { return 'OMR '+Number(n).toFixed(3); }
+function fmtS(n) { return 'OMR '+Number(n).toFixed(2); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function monthTxs() { const k=mk(); return allTxs.filter(t=>t.date&&t.date.startsWith(k)); }
+
+// ── SMS PARSING ──────────────────────────────────────────────
+function parseSMS(raw, id, timestamp) {
+  if (!raw || raw === '[Shortcuts Input]') return null;
+  let tx = { id, source:'sms' };
+  // Parse date from timestamp
+  try {
+    const p = String(timestamp).replace(' at ',' ').split(' ');
+    const months = {January:0,February:1,March:2,April:3,May:4,June:5,
+      July:6,August:7,September:8,October:9,November:10,December:11};
+    const day=parseInt(p[0]), mon=months[p[1]], yr=parseInt(p[2]);
+    tx.date = (!isNaN(day)&&mon!==undefined&&!isNaN(yr))
+      ? yr+'-'+String(mon+1).padStart(2,'0')+'-'+String(day).padStart(2,'0')
+      : today();
+  } catch(e) { tx.date = today(); }
+
+  let m;
+  // Card used for
+  m = raw.match(/used for OMR ([\d.]+) at (.+?) on/);
+  if (m) { tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc=cleanDesc(m[2]); tx.cat=guessCat(m[2]); return tx; }
+  // Sent to
+  m = raw.match(/You have sent OMR ([\d.]+) to (.+?) from/);
+  if (m) {
+    const desc = m[2].trim();
+    if (desc.toUpperCase().includes('MUHA') && desc.toUpperCase().includes('HSAN')) { tx.desc='Barbershop'; tx.cat='personal'; }
+    else { tx.desc='Sent to '+cleanDesc(desc); tx.cat='other'; }
+    tx.type='expense'; tx.amount=parseFloat(m[1]); return tx;
   }
-  m=raw.match(/You have received OMR ([\d.]+) from (.+?) in/);
-  if(m){tx.type='income';tx.amount=parseFloat(m[1]);tx.desc='Received from '+m[2].trim();tx.category='income';autoCheckUpcoming(m[2].trim(),parseFloat(m[1]));return tx;}
-  m=raw.match(/Salary OMR ([\d.]+)/);
-  if(m){tx.type='income';tx.amount=parseFloat(m[1]);tx.desc='Salary';tx.category='income';return tx;}
+  // Own account transfer — skip
+  m = raw.match(/OMR ([\d.]+) is debited from your A\/C (.+?) and credited to your A\/C (.+?) on/);
+  if (m) {
+    const from=m[2].trim(), to=m[3].trim();
+    if ((from.includes('0014')&&to.includes('0022'))||(from.includes('0022')&&to.includes('0014'))) return null;
+    tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc='Account Transfer'; tx.cat='other'; return tx;
+  }
+  // Received
+  m = raw.match(/You have received OMR ([\d.]+) from (.+?) in/);
+  if (m) {
+    tx.type='income'; tx.amount=parseFloat(m[1]);
+    tx.desc='Received from '+cleanDesc(m[2]);
+    tx.cat='income';
+    autoCheckUpcoming(m[2], parseFloat(m[1]));
+    return tx;
+  }
+  // Salary
+  m = raw.match(/Salary OMR ([\d.]+)/);
+  if (m) { tx.type='income'; tx.amount=parseFloat(m[1]); tx.desc='Salary'; tx.cat='income'; return tx; }
+  // Reversed — skip
+  if (raw.includes('reversed and credited')) return null;
+  // Monthly installment debit
+  m = raw.match(/OMR ([\d.]+) is debited from your a\/c.+monthly installment/i);
+  if (m) { tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc='Loan Installment'; tx.cat='loans'; return tx; }
   return null;
 }
 
-function autoCheckUpcoming(sender,amount){
-  const d=loadLocal();const mk=monthKey();
-  d.upcoming=d.upcoming||{};d.upcoming[mk]=d.upcoming[mk]||{};
-  UPCOMING_TEMPLATES.forEach(t=>{if(t.matchSender&&sender.toLowerCase().includes(t.matchSender)&&Math.abs(amount-t.matchAmount)<1) d.upcoming[mk][t.id]=true;});
-  saveLocal(d);
+function cleanDesc(s) {
+  return s.replace(/#+/g,'').replace(/\s+/g,' ').trim().substring(0,30);
 }
 
-function guessCategory(desc){
-  const d=(desc||'').toLowerCase();
-  if(/mcdonald|kfc|restaurant|cafe|food|pizza|burger|lulu|carrefour/.test(d)) return 'food';
-  if(/fuel|petrol|shell|transport|oil/.test(d)) return 'transport';
-  if(/gaming|steam|playstation|xbox/.test(d)) return 'gaming';
-  if(/vodafone|stc|ooredoo|subscription|netflix|spotify/.test(d)) return 'bills';
+function guessCat(desc) {
+  const d = (desc||'').toLowerCase();
+  if (/food|restaurant|cafe|mcdonald|kfc|burger|pizza|hypermax|talabat|mena|lulu|carrefour/.test(d)) return 'food';
+  if (/petrol|fuel|oil|shell|transport/.test(d)) return 'transport';
+  if (/vodafone|stc|ooredoo|discord|netflix|spotify|apple|itunes|youtube/.test(d)) return 'bills';
+  if (/shoes|mall|shop|fashion/.test(d)) return 'social';
   return 'other';
 }
 
-async function fetchSMSTransactions(){
-  try{
-    const res=await fetch(FIREBASE_URL+'/transactions.json');
-    const data=await res.json();
-    if(!data) return [];
-    // Load local to check which Firebase IDs we already have as seeds or manual entries
-    const local=loadLocal();
-    const existingIds=new Set(local.transactions.map(t=>String(t.id)));
-    // Also build a set of seed fingerprints: date+amount+type to block near-duplicates of seeds
-    const seedFingerprints=new Set(MAY_SEED.map(s=>s.date+'|'+s.amount.toFixed(3)+'|'+s.type));
-    const txs=[];
-    Object.entries(data).forEach(([id,entry])=>{
-      const smsId='sms_'+id;
-      if(existingIds.has(smsId)) return; // already stored locally, skip
-      const parsed=parseSMS(entry.rawMessage,smsId,entry.timestamp);
-      if(!parsed) return;
-      const fp=parsed.date+'|'+parsed.amount.toFixed(3)+'|'+parsed.type;
-      if(seedFingerprints.has(fp)) return; // this SMS matches a seed exactly, skip
-      txs.push(parsed);
+function autoCheckUpcoming(sender, amount) {
+  const d = load();
+  const k = mk();
+  d.upcoming[k] = d.upcoming[k] || {};
+  UPCOMING.forEach(u => {
+    if (u.matchSender && sender.toLowerCase().includes(u.matchSender) && Math.abs(amount-u.amount)<1) {
+      d.upcoming[k][u.id] = true;
+    }
+  });
+  save(d);
+}
+
+// ── FIREBASE ─────────────────────────────────────────────────
+async function fetchFirebase() {
+  try {
+    const res = await fetch(FIREBASE+'/transactions.json');
+    const data = await res.json();
+    if (!data) return [];
+    const d = load();
+    // Build set of all known IDs (seeds + manual)
+    const knownIds = new Set(d.txs.map(t => String(t.id)));
+    // Build fingerprint set from seeds to block duplicates
+    const fps = new Set(SEEDS.map(s => s.date+'|'+s.amount.toFixed(3)+'|'+s.type));
+    const result = [];
+    Object.entries(data).forEach(([fbId, entry]) => {
+      const id = 'sms_'+fbId;
+      if (knownIds.has(id)) return;
+      const parsed = parseSMS(entry.rawMessage, id, entry.timestamp);
+      if (!parsed) return;
+      const fp = parsed.date+'|'+parsed.amount.toFixed(3)+'|'+parsed.type;
+      if (fps.has(fp)) return; // duplicate of a seed
+      result.push(parsed);
     });
-    if(txs.length>lastSMSCount&&lastSMSCount>0) showSyncBar();
-    lastSMSCount=txs.length;
-    return txs;
-  }catch(e){return [];}
+    if (result.length > lastFirebaseCount && lastFirebaseCount > 0) showSyncBar();
+    lastFirebaseCount = result.length;
+    return result;
+  } catch(e) { return []; }
 }
 
-function showSyncBar(){const bar=document.getElementById('syncBar');bar.classList.add('show');setTimeout(()=>bar.classList.remove('show'),3000);}
+function showSyncBar() {
+  const b = document.getElementById('syncBar');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 3000);
+}
 
-async function refreshData(){
-  const smsTxs=await fetchSMSTransactions();
-  const local=loadLocal();
-  // Merge and deduplicate by id — seeds take priority over SMS
-  const seen=new Set();
-  const merged=[];
-  for(const t of [...local.transactions,...smsTxs]){
-    const key=String(t.id);
-    if(!seen.has(key)){seen.add(key);merged.push(t);}
+// ── REFRESH ──────────────────────────────────────────────────
+async function refresh() {
+  const smsTxs = await fetchFirebase();
+  const d = load();
+  // Merge: seeds/manual first, then SMS. Deduplicate by ID.
+  const seen = new Set();
+  const merged = [];
+  for (const t of [...d.txs, ...smsTxs]) {
+    const key = String(t.id);
+    if (!seen.has(key)) { seen.add(key); merged.push(t); }
   }
-  allTransactions=merged;
-  renderHome();renderTx();
+  allTxs = merged;
+  renderHome();
+  renderTx();
+  renderHistory();
 }
 
-function goTo(page){
+// ── RENDER HOME ──────────────────────────────────────────────
+function renderHome() {
+  const k = mk();
+  const txs = monthTxs();
+  // Balance = ALL transactions ever (seeds are the ground truth)
+  const allInc = allTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const allExp = allTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = allInc - allExp;
+  // Month stats
+  const mInc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const mExp = txs.filter(t=>t.type==='expense'&&t.cat!=='saving').reduce((s,t)=>s+t.amount,0);
+  const mSaved = txs.filter(t=>t.cat==='saving').reduce((s,t)=>s+t.amount,0);
+
+  document.getElementById('h-balance').textContent = fmtS(balance);
+  document.getElementById('h-spent').textContent = fmtS(mExp);
+  document.getElementById('h-income').textContent = fmtS(mInc);
+  document.getElementById('h-saved').textContent = fmtS(mSaved);
+
+  // Month label
+  const ml = curDate.toLocaleString('en',{month:'long',year:'numeric'});
+  document.querySelectorAll('.mkey').forEach(e=>e.textContent=ml);
+
+  renderUpcoming();
+  renderBills();
+  renderSavings(balance, mExp);
+}
+
+// ── UPCOMING ─────────────────────────────────────────────────
+function renderUpcoming() {
+  const d = load();
+  const k = mk();
+  const state = (d.upcoming[k]) || {};
+  const el = document.getElementById('upcomingList');
+  const totalE = UPCOMING.reduce((s,u)=>s+u.amount,0);
+  const totalR = UPCOMING.filter(u=>state[u.id]).reduce((s,u)=>s+u.amount,0);
+
+  el.innerHTML = UPCOMING.map(u => {
+    const done = !!state[u.id];
+    return `<div class="up-item">
+      <div class="up-check ${done?'done':'pending'}" onclick="toggleUpcoming('${u.id}')">${done?'✓':''}</div>
+      <div class="up-info">
+        <div class="up-name">${u.label}</div>
+        <div class="up-sub">${done?'✅ Received':'⏳ '+u.note}</div>
+      </div>
+      <div class="up-amt">+${fmt(u.amount)}</div>
+    </div>`;
+  }).join('') +
+  `<div class="up-row"><span style="color:var(--muted)">Expected: ${fmtS(totalE)}</span><span style="color:var(--accent)">Received: ${fmtS(totalR)}</span></div>`;
+}
+
+function toggleUpcoming(id) {
+  const d = load();
+  const k = mk();
+  d.upcoming[k] = d.upcoming[k] || {};
+  const was = !!d.upcoming[k][id];
+  const u = UPCOMING.find(x=>x.id===id);
+  if (!u) return;
+  const txId = 'up_'+id+'_'+k;
+
+  // Is this income already covered by a seed for this month?
+  const inSeeds = d.txs.some(t =>
+    (t.id||'').startsWith('s') &&
+    t.type==='income' &&
+    Math.abs(t.amount-u.amount)<0.01 &&
+    (t.date||'').startsWith(k)
+  );
+
+  if (!was) {
+    d.upcoming[k][id] = true;
+    if (!inSeeds) {
+      d.txs = d.txs.filter(t=>t.id!==txId);
+      d.txs.push({ id:txId, type:'income', desc:u.label, amount:u.amount, cat:'income', date:today(), source:'manual' });
+    }
+  } else {
+    d.upcoming[k][id] = false;
+    if (!inSeeds) {
+      d.txs = d.txs.filter(t=>t.id!==txId);
+    }
+  }
+  save(d);
+  refresh();
+}
+
+// ── BILLS ─────────────────────────────────────────────────────
+function renderBills() {
+  const d = load();
+  const k = mk();
+  const paid = d.bills[k] || {};
+  const now = new Date();
+  const curDay = now.getDate();
+  const curMk = mk(now);
+  const isCurrentMonth = (k === curMk);
+
+  let html = '';
+  let totalAmt = 0;
+  let totalPaid = 0;
+
+  BILLS.forEach(b => {
+    // Skip if not started yet
+    if (b.startsMonth && k < b.startsMonth) return;
+    const isPaid = !!paid[b.id];
+    totalAmt += b.amount;
+    if (isPaid) totalPaid += b.amount;
+
+    let dueLabel='', dueClass='';
+    if (isPaid) { dueLabel='Paid ✓'; dueClass='paid'; }
+    else if (isCurrentMonth) {
+      const diff = b.day - curDay;
+      if (diff < 0) { dueLabel=`Overdue by ${Math.abs(diff)}d`; dueClass='overdue'; }
+      else if (diff === 0) { dueLabel='Due today!'; dueClass='today'; }
+      else if (diff <= 5) { dueLabel=`Due in ${diff}d`; dueClass='soon'; }
+      else { dueLabel=`Due ${b.day}th`; dueClass=''; }
+    } else { dueLabel=`Due ${b.day}th`; }
+
+    html += `<div class="bill-item">
+      <div class="bill-icon">${b.emoji}</div>
+      <div class="bill-info">
+        <div class="bill-name">${b.name}</div>
+        <div class="bill-due ${dueClass}">${dueLabel}</div>
+      </div>
+      <div class="bill-amt ${isPaid?'paid':''}" style="color:${isPaid?'var(--green)':dueClass==='overdue'?'var(--danger)':'var(--text)'}">-${fmt(b.amount)}</div>
+      <button class="bill-tap ${isPaid?'mark-unpaid':'mark-paid'}" onclick="toggleBill('${b.id}')">${isPaid?'UNDO':'PAID'}</button>
+    </div>`;
+  });
+
+  html += `<div class="bills-total">
+    <span style="color:var(--muted)">Total bills: <span style="color:var(--text)">${fmtS(totalAmt)}</span></span>
+    <span style="color:var(--green)">Paid: ${fmtS(totalPaid)}</span>
+  </div>`;
+
+  document.getElementById('billsList').innerHTML = html;
+}
+
+function toggleBill(id) {
+  const d = load();
+  const k = mk();
+  d.bills[k] = d.bills[k] || {};
+  d.bills[k][id] = !d.bills[k][id];
+  save(d);
+  renderBills();
+}
+
+// ── SAVINGS PLANNER ───────────────────────────────────────────
+function renderSavings(balance, mSpent) {
+  const slider = document.getElementById('savSlider');
+  const savAmt = parseInt(slider.value);
+  document.getElementById('savVal').textContent = savAmt+' OMR';
+
+  // Calculate remaining after fixed bills (unpaid)
+  const d = load();
+  const k = mk();
+  const paid = d.bills[k] || {};
+  let billsLeft = 0;
+  BILLS.forEach(b => {
+    if (b.startsMonth && k < b.startsMonth) return;
+    if (!paid[b.id]) billsLeft += b.amount;
+  });
+
+  const freeMoney = balance - savAmt - billsLeft;
+  const daysLeft = daysRemainingInMonth();
+  const workdays = workdaysLeft();
+  const weekendDays = daysLeft - workdays;
+
+  // Daily limits: weekdays Sun-Wed (5 days/wk), weekends Thu-Sat
+  // Use free money / days but split by ratio
+  const dailyWeekday = workdays > 0 ? (freeMoney * 0.6 / Math.max(workdays,1)) : 0;
+  const dailyWeekend = weekendDays > 0 ? (freeMoney * 0.4 / Math.max(weekendDays,1)) : 0;
+
+  const freeColor = freeMoney < 0 ? 'danger' : freeMoney < 50 ? 'warn' : '';
+
+  document.getElementById('savInfo').innerHTML = `
+    <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
+    <div class="sav-line"><span>Save this month</span><span>- ${fmtS(savAmt)}</span></div>
+    <div class="sav-line"><span>Bills remaining</span><span class="warn">- ${fmtS(billsLeft)}</span></div>
+    <div class="sav-line"><span>Free to spend</span><span class="${freeColor}">${fmtS(freeMoney)}</span></div>
+    <div class="sav-line"><span>Days left in month</span><span>${daysLeft}</span></div>
+  `;
+
+  document.getElementById('dayBox').innerHTML = `
+    <div class="day-card">
+      <div class="day-lbl">Weekday Limit</div>
+      <div class="day-amt">${fmtS(Math.max(0,dailyWeekday))}</div>
+      <div class="day-sub">Sun–Wed per day</div>
+    </div>
+    <div class="day-card">
+      <div class="day-lbl">Weekend Limit</div>
+      <div class="day-amt">${fmtS(Math.max(0,dailyWeekend))}</div>
+      <div class="day-sub">Thu–Sat per day</div>
+    </div>
+  `;
+}
+
+function onSavSlider() {
+  const d = load();
+  const k = mk();
+  const allInc = allTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const allExp = allTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  renderSavings(allInc-allExp, 0);
+}
+
+function daysRemainingInMonth() {
+  const now = new Date();
+  const last = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  return last - now.getDate();
+}
+
+function workdaysLeft() {
+  // Count Sun-Wed remaining this month
+  const now = new Date();
+  const last = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  let count = 0;
+  for (let d = now.getDate()+1; d <= last; d++) {
+    const day = new Date(now.getFullYear(), now.getMonth(), d).getDay();
+    if (day >= 0 && day <= 3) count++; // Sun=0, Mon=1, Tue=2, Wed=3
+  }
+  return count;
+}
+
+// ── TX LOG ────────────────────────────────────────────────────
+function renderTx() {
+  const dateStr = viewDate.toISOString().split('T')[0];
+  const todayStr = today();
+  const isToday = dateStr === todayStr;
+
+  const d = viewDate;
+  document.getElementById('dayLabel').textContent = isToday ? 'TODAY' :
+    d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+
+  const txs = allTxs.filter(t=>t.date===dateStr)
+    .sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+
+  const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  document.getElementById('txSummary').innerHTML =
+    `<span style="color:var(--accent)">+${fmtS(inc)}</span>&nbsp;&nbsp;
+     <span style="color:var(--danger)">-${fmtS(exp)}</span>&nbsp;&nbsp;
+     <span>${txs.length} transactions</span>`;
+
+  if (!txs.length) {
+    document.getElementById('txList').innerHTML = `<div class="tx-empty">// NO TRANSACTIONS //</div>`;
+    return;
+  }
+
+  document.getElementById('txList').innerHTML = txs.map(t => {
+    const cat = CATS[t.cat||'other'] || CATS.other;
+    const isInc = t.type==='income';
+    const tag = t.source==='sms'?'SMS':t.source==='seed'?'':t.source==='manual'?'MAN':'';
+    return `<div class="tx-item">
+      <div class="tx-icon">${cat.emoji}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.desc||'Transaction'}${tag?`<span class="tx-tag">${tag}</span>`:''}</div>
+        <div class="tx-cat">${cat.label}</div>
+      </div>
+      <div class="tx-amt ${isInc?'inc':'exp'}">${isInc?'+':'-'}${fmt(t.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function changeDay(dir) {
+  viewDate = new Date(viewDate);
+  viewDate.setDate(viewDate.getDate()+dir);
+  renderTx();
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory() {
+  const txs = monthTxs();
+  const exp = txs.filter(t=>t.type==='expense'&&t.cat!=='saving');
+  const total = exp.reduce((s,t)=>s+t.amount,0);
+
+  // By category
+  const byCat = {};
+  exp.forEach(t => { byCat[t.cat||'other'] = (byCat[t.cat||'other']||0)+t.amount; });
+  const sorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+
+  // Cat list
+  document.getElementById('catList').innerHTML = sorted.map(([cat,amt]) => {
+    const c = CATS[cat]||CATS.other;
+    const pct = total>0?(amt/total*100):0;
+    return `<div class="cat-item">
+      <span style="font-size:1.1rem">${c.emoji}</span>
+      <span style="font-size:.78rem;min-width:90px">${c.label}</span>
+      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${c.color}"></div></div>
+      <span class="cat-pct">${pct.toFixed(0)}%</span>
+      <span class="cat-amt" style="color:${c.color}">${fmtS(amt)}</span>
+    </div>`;
+  }).join('') || '<div style="padding:16px;color:var(--muted);font-size:.75rem">No data</div>';
+
+  // Donut
+  renderDonut(sorted, total);
+}
+
+function renderDonut(sorted, total) {
+  const svg = document.getElementById('donutSvg');
+  const cx=65,cy=65,r=50,stroke=18;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  let paths = '';
+  const top5 = sorted.slice(0,5);
+  top5.forEach(([cat,amt]) => {
+    const c = CATS[cat]||CATS.other;
+    const pct = total>0?(amt/total):0;
+    const dash = pct*circ;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}"
+      stroke-width="${stroke}" stroke-dasharray="${dash} ${circ-dash}"
+      stroke-dashoffset="${-offset}" opacity=".85"/>`;
+    offset += dash;
+  });
+  svg.innerHTML = paths || `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--dim)" stroke-width="${stroke}"/>`;
+
+  const topCat = sorted[0];
+  if (topCat) {
+    const c = CATS[topCat[0]]||CATS.other;
+    document.getElementById('donutPct').textContent = total>0?(topCat[1]/total*100).toFixed(0)+'%':'0%';
+    document.getElementById('donutPct').style.color = c.color;
+  }
+
+  document.getElementById('donutLegend').innerHTML = top5.map(([cat,amt]) => {
+    const c = CATS[cat]||CATS.other;
+    const pct = total>0?(amt/total*100).toFixed(0):0;
+    return `<div class="legend-item">
+      <div class="legend-dot" style="background:${c.color}"></div>
+      <span>${c.emoji} ${c.label}</span>
+      <span style="margin-left:auto;color:${c.color};font-family:'Orbitron',monospace">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── ADD TX ────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('txDate').value = today();
+  buildCatGrid();
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if(e.target.id==='modalOverlay') closeModal(); }
+
+function setType(t) {
+  txType = t;
+  document.getElementById('btnExp').classList.toggle('active', t==='expense');
+  document.getElementById('btnInc').classList.toggle('active', t==='income');
+}
+
+function buildCatGrid() {
+  const cats = Object.entries(CATS).filter(([k])=>k!=='income');
+  document.getElementById('catGrid').innerHTML = cats.map(([k,v]) =>
+    `<button class="cat-btn ${selCat===k?'active':''}" onclick="selCat='${k}';buildCatGrid()">${v.emoji} ${v.label}</button>`
+  ).join('');
+}
+
+function addTx() {
+  const amt = parseFloat(document.getElementById('txAmt').value);
+  const desc = document.getElementById('txDesc').value.trim();
+  const date = document.getElementById('txDate').value;
+  if (!amt||amt<=0||!desc||!date) { alert('Fill all fields'); return; }
+  const d = load();
+  const id = 'manual_'+Date.now();
+  d.txs.push({ id, type:txType, desc, amount:amt, cat:txType==='income'?'income':selCat, date, source:'manual' });
+  save(d);
+  closeModal();
+  document.getElementById('txAmt').value='';
+  document.getElementById('txDesc').value='';
+  refresh();
+}
+
+// ── MONTH NAV ─────────────────────────────────────────────────
+function changeMonth(dir) {
+  curDate = new Date(curDate.getFullYear(), curDate.getMonth()+dir, 1);
+  viewDate = new Date(curDate);
+  refresh();
+}
+
+// ── RADIO ─────────────────────────────────────────────────────
+let radioPlaying = false;
+function toggleRadio() {
+  const audio = document.getElementById('radioAudio');
+  const btn = document.getElementById('radioBtn');
+  const eq = document.getElementById('radioEq');
+  if (radioPlaying) {
+    audio.pause();
+    btn.textContent = 'PLAY';
+    eq.classList.add('paused');
+    radioPlaying = false;
+  } else {
+    audio.play().catch(()=>{});
+    btn.textContent = 'MUTE';
+    eq.classList.remove('paused');
+    radioPlaying = true;
+  }
+}
+
+// ── PAGE NAV ─────────────────────────────────────────────────
+function goTo(page) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  if(page==='home') renderHome();
-  if(page==='tx'){viewDate=new Date();renderTx();}
+  if (page==='tx') { viewDate=new Date(); renderTx(); }
+  if (page==='history') renderHistory();
 }
 
-function changeMonth(dir){currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+dir,1);updateMonthLabels();renderHome();renderTx();}
-
-function updateMonthLabels(){
-  const label=currentDate.toLocaleString('en',{month:'long',year:'numeric'});
-  document.getElementById('currentMonth').textContent=label;
-  document.getElementById('currentMonth2').textContent=label;
-}
-
-// Day navigation for history
-function changeDay(dir){
-  const newDate=new Date(viewDate);
-  newDate.setDate(newDate.getDate()+dir);
-  if(newDate>new Date()) return;
-  viewDate=newDate;
-  renderTx();
-}
-
-function setType(type){
-  txType=type;
-  document.getElementById('btnExp').className='type-btn'+(type==='expense'?' active-expense':'');
-  document.getElementById('btnInc').className='type-btn'+(type==='income'?' active-income':'');
-  const sel=document.getElementById('addCategory');
-  if(type==='income'){sel.innerHTML='<option value="income">💵 Salary / Income</option>';}
-  else{sel.innerHTML=`<option value="food">🍔 Food & Drinks</option><option value="gaming">🎮 Gaming</option><option value="transport">🚗 Car & Transport</option><option value="social">👥 Hanging Out / Social</option><option value="bills">💡 Bills & Subscriptions</option><option value="saving">💰 Savings</option><option value="personal">✂️ Personal Care</option><option value="loans">🏦 Loan Payment</option><option value="other">📦 Other</option>`;}
-}
-
-async function addTx(){
-  const desc=document.getElementById('addDesc').value.trim();
-  const amount=parseFloat(document.getElementById('addAmount').value);
-  const cat=document.getElementById('addCategory').value;
-  const date=document.getElementById('addDate').value;
-  if(!desc||!amount||amount<=0||!date) return;
-  const d=loadLocal();
-  d.transactions.push({id:Date.now(),type:txType,desc,amount,category:cat,date,source:'manual'});
-  saveLocal(d);
-  document.getElementById('addDesc').value='';document.getElementById('addAmount').value='';
-  const btn=document.querySelector('.submit-btn');
-  btn.textContent='✅ LOGGED!';btn.style.background='rgba(245,197,24,.3)';
-  setTimeout(()=>{btn.textContent='✓ LOG TRANSACTION';btn.style.background='';},1200);
-  await refreshData();goTo('home');
-}
-
-function deleteTx(id){const d=loadLocal();d.transactions=d.transactions.filter(t=>String(t.id)!==String(id));saveLocal(d);refreshData();}
-
-function moveToSavings(){
-  const amt=parseFloat(document.getElementById('saveAmount').value);
-  if(!amt||amt<=0) return;
-  const d=loadLocal();
-  d.transactions.push({id:Date.now(),type:'expense',desc:'Moved to Savings',amount:amt,category:'saving',date:new Date().toISOString().split('T')[0],source:'manual'});
-  saveLocal(d);document.getElementById('saveAmount').value='';showSyncBar();refreshData();
-}
-
-function onSavingsSlide(){
-  const val=parseInt(document.getElementById('savingsSlider').value);
-  document.getElementById('savingsSliderVal').textContent=val+' OMR';
-  const income=986;const fixed=426.487;const free=income-fixed-val;
-  const weekdays=18,weekends=12;
-  const wdLimit=Math.floor((free/(weekdays+weekends*2))*10)/10;
-  const weLimit=Math.floor(wdLimit*2*10)/10;
-  document.getElementById('savingsImpact').innerHTML=
-    `Save <strong style="color:var(--accent)">${val} OMR</strong> → Free to spend: <strong style="color:var(--accent2)">${free.toFixed(0)} OMR/month</strong><br>` +
-    `Daily limits: <strong style="color:var(--accent)">Weekday ${wdLimit} OMR</strong> / <strong style="color:var(--accent)">Weekend ${weLimit} OMR</strong>`;
-  const d=loadLocal();d.goals=d.goals||{};d.goals[monthKey()]=val;saveLocal(d);renderHome();
-}
-
-function toggleUpcoming(id){
-  const d=loadLocal();const mk=monthKey();
-  d.upcoming=d.upcoming||{};d.upcoming[mk]=d.upcoming[mk]||{};
-  const was=!!d.upcoming[mk][id];
-  const tmpl=UPCOMING_TEMPLATES.find(t=>t.id===id);if(!tmpl) return;
-  const txId='upcoming_'+id+'_'+mk;
-  // Check if this income is already covered by a seed transaction
-  const coveredBySeed=d.transactions.some(t=>
-    t.source==='seed' && t.type==='income' &&
-    Math.abs(t.amount-tmpl.amount)<0.01 &&
-    (t.date||'').startsWith(mk)
-  );
-  if(!was){
-    // Mark as received
-    d.upcoming[mk][id]=true;
-    if(!coveredBySeed){
-      // Only add a transaction if not already in seeds
-      d.transactions=d.transactions.filter(t=>t.id!==txId);
-      d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
-    }
-  }else{
-    // Unmark - toggle back to pending
-    d.upcoming[mk][id]=false;
-    if(!coveredBySeed){
-      d.transactions=d.transactions.filter(t=>t.id!==txId);
-    }
-    // If covered by seed, just flip the UI state — seed stays, no double counting
-  }
-  saveLocal(d);refreshData();
-}
-
-function toggleBill(id){
-  const d=loadLocal();const mk=monthKey();
-  d.bills=d.bills||{};d.bills[mk]=d.bills[mk]||{};
-  const was=!!d.bills[mk][id];
-  const bill=BILL_TEMPLATES.find(b=>b.id===id);if(!bill) return;
-  const txId='bill_'+id+'_'+mk;
-  if(!was){
-    d.bills[mk][id]=true;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
-    d.transactions.push({id:txId,type:'expense',desc:bill.name,amount:bill.amount,category:bill.category,date:new Date().toISOString().split('T')[0],source:'bill'});
-  }else{
-    d.bills[mk][id]=false;
-    d.transactions=d.transactions.filter(t=>t.id!==txId);
-  }
-  saveLocal(d);refreshData();
-}
-
-function getDailyLimit(){
-  const day=new Date().getDay();
-  return (day>=0&&day<=3)?DAILY_LIMITS.weekday:DAILY_LIMITS.weekend;
-}
-
-function getTodaySpent(){
-  const today=new Date().toISOString().split('T')[0];
-  return allTransactions.filter(t=>t.type==='expense'&&t.date===today&&t.category!=='loans'&&t.category!=='saving').reduce((s,t)=>s+t.amount,0);
-}
-
-function renderDailyLimit(){
-  const bar=document.getElementById('dailyLimitBar');
-  // Only show from June 2026 onwards
-  const now=new Date();
-  if(now.getFullYear()===2026&&now.getMonth()<5){bar.style.display='none';return;}
-  bar.style.display='block';
-  const limit=getDailyLimit();const spent=getTodaySpent();
-  const remaining=limit-spent;const pct=Math.min(100,Math.round((spent/limit)*100));
-  const day=new Date().getDay();const isWeekend=day>=4;
-  const exceeded=spent>limit;
-  bar.className='daily-bar'+(exceeded?' exceeded':'');
-  if(exceeded){
-    bar.innerHTML=`⚠ LIMIT EXCEEDED // ${isWeekend?'WEEKEND':'WEEKDAY'} ${limit} OMR — SPENT ${spent.toFixed(3)} OMR`;
-    if(Notification.permission==='granted') new Notification('⚠ Spending Limit Exceeded',{body:`Spent ${spent.toFixed(3)} OMR. Limit: ${limit} OMR.`});
-  }else{
-    bar.innerHTML=`// ${isWeekend?'WEEKEND':'WEEKDAY'} BUDGET: ${remaining.toFixed(3)} OMR LEFT TODAY [${pct}% used]`;
-  }
-}
-
-function renderHome(){
-  const txs=monthTxs();const d=loadLocal();
-  const allInc=allTransactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const allExp=allTransactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const balance=allInc-allExp;
-  const mInc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const mLoans=txs.filter(t=>t.category==='loans').reduce((s,t)=>s+t.amount,0);
-  const mExp=txs.filter(t=>t.type==='expense'&&t.category!=='saving'&&t.category!=='loans').reduce((s,t)=>s+t.amount,0);
-  const mSaved=txs.filter(t=>t.category==='saving').reduce((s,t)=>s+t.amount,0);
-  document.getElementById('h-income').textContent=fmtS(mInc);
-  document.getElementById('h-spent').textContent=fmtS(mExp);
-  document.getElementById('h-saved').textContent=fmtS(mSaved);
-  document.getElementById('h-balance').textContent=fmtS(balance);
-  const goal=(d.goals||{})[monthKey()]||0;
-  const pct=goal>0?Math.min(100,Math.round((mSaved/goal)*100)):0;
-  document.getElementById('h-save-bar').style.width=pct+'%';
-  document.getElementById('h-saved-pct').textContent=goal>0?pct+'% of goal':'No goal set';
-  document.getElementById('g-saved-label').textContent='Saved: '+fmtS(mSaved);
-  document.getElementById('g-goal-label').textContent=goal>0?'Goal: '+fmtS(goal)+(pct>=100?' ✓':''):'Goal: not set';
-  document.getElementById('g-bar').style.width=pct+'%';
-  const sliderVal=goal||300;
-  document.getElementById('savingsSlider').value=sliderVal;
-  document.getElementById('savingsSliderVal').textContent=sliderVal+' OMR';
-  const free=986-426.487-sliderVal;
-  const wdL=Math.floor((free/42)*10)/10;const weL=Math.floor(wdL*2*10)/10;
-  document.getElementById('savingsImpact').innerHTML=`Save <strong style="color:var(--accent)">${sliderVal} OMR</strong> → Free: <strong style="color:var(--accent2)">${free.toFixed(0)} OMR/month</strong><br>Daily: <strong style="color:var(--accent)">Weekday ${wdL} OMR / Weekend ${weL} OMR</strong>`;
-  renderDailyLimit();renderUpcoming();renderBills();renderCatList(txs,mExp+mLoans);renderDonut(txs,mExp+mLoans);
-}
-
-function renderUpcoming(){
-  const d=loadLocal();const mk=monthKey();const state=(d.upcoming||{})[mk]||{};
-  const el=document.getElementById('upcomingList');
-  const totalR=UPCOMING_TEMPLATES.filter(t=>state[t.id]).reduce((s,t)=>s+t.amount,0);
-  const totalE=UPCOMING_TEMPLATES.reduce((s,t)=>s+t.amount,0);
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:.75rem"><span style="color:var(--muted)">Expected</span><span style="color:var(--accent);font-family:'Orbitron',monospace">${fmtS(totalE)}</span></div>`+
-  UPCOMING_TEMPLATES.map(t=>{
-    const done=!!state[t.id];
-    const coveredBySeed=d.transactions.some(s=>s.source==='seed'&&s.type==='income'&&Math.abs(s.amount-t.amount)<0.01&&(s.date||'').startsWith(mk));
-    // If covered by seed and checked, show as locked-received (no onclick to uncheck/re-add)
-    return `<div class="upcoming-item"><div class="upcoming-check ${done?'done':'pending'}" onclick="toggleUpcoming('${t.id}')">${done?'✓':''}</div><div class="upcoming-info"><div class="upcoming-name">${t.label}</div><div class="upcoming-sub">${done?'✅ Received':'⏳ '+t.note}</div></div><div class="upcoming-amount">+${fmt(t.amount)}</div></div>`;
-  }).join('')+
-  `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--dim);display:flex;justify-content:space-between;font-size:.75rem"><span style="color:var(--muted)">Received</span><span style="color:var(--accent);font-family:'Orbitron',monospace">${fmtS(totalR)} / ${fmtS(totalE)}</span></div>`;
-}
-
-function renderBills(){
-  const today=new Date();const currentDay=today.getDate();
-  const mk=monthKey();const d=loadLocal();const paid=(d.bills||{})[mk]||{};
-  const el=document.getElementById('billList');
-  const total=BILL_TEMPLATES.reduce((s,b)=>s+b.amount,0);
-  el.innerHTML=BILL_TEMPLATES.map(b=>{
-    const isPaid=!!paid[b.id];
-    const daysUntil=b.day-currentDay;
-    let dueLabel=isPaid?'Paid ✓':daysUntil<0?`Overdue by ${Math.abs(daysUntil)}d`:daysUntil===0?'Due today!':daysUntil<=3?`Due in ${daysUntil}d`:`Due ${b.day}th`;
-    const dueCls=(!isPaid&&daysUntil<0)?'bill-due overdue':(!isPaid&&daysUntil<=3)?'bill-due soon':'bill-due';
-    return `<div class="bill-item ${isPaid?'paid':''}" onclick="toggleBill('${b.id}')"><div class="bill-emoji">${b.emoji}</div><div class="bill-info"><div class="bill-name">${b.name}</div><div class="${dueCls}">${dueLabel}</div></div><div class="bill-amount">${isPaid?'✓':'-'}${fmt(b.amount)}</div></div>`;
-  }).join('')+`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--dim);display:flex;justify-content:space-between;font-size:.75rem"><span style="color:var(--muted)">Total bills</span><span style="color:var(--danger);font-family:'Orbitron',monospace">-${fmtS(total)} OMR</span></div>`;
-}
-
-function renderCatList(txs,total){
-  const by={};txs.filter(t=>t.type==='expense').forEach(t=>{by[t.category]=(by[t.category]||0)+t.amount;});
-  const sorted=Object.entries(by).sort((a,b)=>b[1]-a[1]);
-  const el=document.getElementById('catList');
-  if(!sorted.length){el.innerHTML='<div class="empty"><span class="big">🧾</span>No expenses yet</div>';return;}
-  el.innerHTML=sorted.map(([cat,amt])=>{const c=CATS[cat]||CATS.other;const pct=total>0?Math.round((amt/total)*100):0;return `<div class="cat-row"><div class="cat-emoji">${c.emoji}</div><div class="cat-info"><div class="cat-name">${c.label}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c.color}"></div></div><div class="cat-pct-label">${pct}% of spending</div></div><div class="cat-amount" style="color:${c.color}">${fmtS(amt)}</div></div>`;}).join('');
-}
-
-function renderDonut(txs,total){
-  const by={};txs.filter(t=>t.type==='expense').forEach(t=>{by[t.category]=(by[t.category]||0)+t.amount;});
-  const sorted=Object.entries(by).sort((a,b)=>b[1]-a[1]);
-  const svg=document.getElementById('donutSvg');const legend=document.getElementById('donutLegend');
-  if(!sorted.length||total===0){svg.innerHTML=`<circle cx="55" cy="55" r="40" fill="none" stroke="#1a1600" stroke-width="18"/><text x="55" y="59" text-anchor="middle" fill="#7a6a20" font-size="11" font-family="Orbitron,sans-serif">No data</text>`;legend.innerHTML='';return;}
-  const r=40,cx=55,cy=55,circ=2*Math.PI*r;let offset=0,arcs='';
-  sorted.forEach(([cat,amt])=>{const c=CATS[cat]||CATS.other;const dash=(amt/total)*circ;arcs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}" stroke-width="18" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;offset+=dash;});
-  const top=sorted[0];const topC=CATS[top[0]]||CATS.other;const topPct=Math.round((top[1]/total)*100);
-  svg.innerHTML=arcs+`<text x="55" y="52" text-anchor="middle" fill="#f0d060" font-size="13" font-weight="bold" font-family="Orbitron,sans-serif">${topC.emoji}</text><text x="55" y="65" text-anchor="middle" fill="#7a6a20" font-size="9" font-family="Orbitron,sans-serif">${topPct}%</text>`;
-  legend.innerHTML=sorted.slice(0,5).map(([cat,amt])=>{const c=CATS[cat]||CATS.other;const pct=Math.round((amt/total)*100);return `<div class="legend-item"><div class="legend-dot" style="background:${c.color}"></div><span>${c.emoji} ${c.label} <strong>${pct}%</strong></span></div>`;}).join('');
-}
-
-function renderTx(){
-  const viewDateStr=viewDate.toISOString().split('T')[0];
-  const today=new Date().toISOString().split('T')[0];
-  const isToday=viewDateStr===today;
-  const dayLabel=isToday?'TODAY':viewDate.toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
-  document.getElementById('dayLabel').textContent=dayLabel;
-  document.getElementById('dayNext').disabled=isToday;
-  const txs=allTransactions.filter(t=>t.date===viewDateStr).sort((a,b)=>String(b.id).localeCompare(String(a.id)));
-  const daySpent=txs.filter(t=>t.type==='expense'&&t.category!=='loans'&&t.category!=='saving').reduce((s,t)=>s+t.amount,0);
-  const dayInc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  document.getElementById('dayTotal').innerHTML=`<span style="color:var(--accent)">+${fmtS(dayInc)}</span> &nbsp;|&nbsp; <span style="color:var(--danger)">-${fmtS(daySpent)}</span> &nbsp;|&nbsp; ${txs.length} transactions`;
-  const el=document.getElementById('txList');
-  if(!txs.length){el.innerHTML='<div class="empty"><span class="big">☢</span>NO TRANSACTIONS THIS DAY</div>';return;}
-  el.innerHTML=txs.map(t=>{
-    const c=CATS[t.category]||CATS.other;
-    const sign=t.type==='income'?'+':'-';const cls=t.type==='income'?'plus':'minus';
-    const smsBadge=t.source==='sms'?'<span class="sms-badge">SMS</span>':'';
-    const isLocked=t.source==='sms'||t.source==='seed'||t.source==='bill';
-    const delBtn=!isLocked?`<button class="tx-del" onclick="deleteTx('${t.id}')">✕</button>`:'';
-    return `<div class="tx-item"><div class="tx-icon" style="background:${c.color}22">${c.emoji}</div><div class="tx-info"><div class="tx-desc">${t.desc||'Unknown'}${smsBadge}</div><div class="tx-meta">${c.label}</div></div><div class="tx-right"><div class="tx-amount ${cls}">${sign} ${fmt(t.amount)}</div>${delBtn}</div></div>`;
-  }).join('');
-}
-
-// Radio
-let radioPlaying=false;
-const audio=document.getElementById('radioAudio');
-const TRACKS=['Mr. Sandman — The Chordettes','Take Me Home, Country Roads — John Denver','Ghost Riders in the Sky — Sons of the Pioneers',"Civilization — Danny Kaye",'Appalachian Breeze — Vault Radio'];
-let trackIdx=0;
-function startRadio(){audio.volume=0.4;audio.play().then(()=>{radioPlaying=true;document.getElementById('radioBtn').textContent='⏸ MUTE';document.getElementById('radioTitle').textContent=TRACKS[trackIdx];setInterval(()=>{trackIdx=(trackIdx+1)%TRACKS.length;document.getElementById('radioTitle').textContent=TRACKS[trackIdx];},180000);}).catch(()=>{document.getElementById('radioTitle').textContent='TAP PLAY TO START';});}
-function toggleRadio(){if(radioPlaying){audio.pause();radioPlaying=false;document.getElementById('radioBtn').textContent='▶ PLAY';document.getElementById('radioBar').classList.add('muted');document.getElementById('radioTitle').textContent='-- SIGNAL OFFLINE --';}else{audio.play().then(()=>{radioPlaying=true;document.getElementById('radioBtn').textContent='⏸ MUTE';document.getElementById('radioBar').classList.remove('muted');document.getElementById('radioTitle').textContent=TRACKS[trackIdx];});}}
-document.addEventListener('touchstart',function f(){startRadio();document.removeEventListener('touchstart',f);},{once:true});
-
-if('Notification' in window&&Notification.permission==='default') Notification.requestPermission();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
-initSeed();
-setInterval(refreshData,30000);
-document.getElementById('addDate').valueAsDate=new Date();
-updateMonthLabels();
-viewDate=new Date();
-refreshData();
+// ── BOOT ─────────────────────────────────────────────────────
+wipeOld();
+initSeeds();
+refresh();
+setInterval(refresh, 30000); // Auto-refresh every 30s
 </script>
 </body>
 </html>
