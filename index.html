@@ -384,15 +384,16 @@ const SALARY = 736;
 const BILLS = [
   { id:'b_loan1',   emoji:'🏦', name:'Loan Payment 1',  amount:255.893, day:20, cat:'loans',   autoDeduct:true },
   { id:'b_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:20, cat:'loans',   autoDeduct:true },
-  { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:36.300,  day:20, cat:'other' },
-  { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  cat:'bills' },
+  { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:31.000,  day:5,  cat:'other',   smsMatch:{type:'sent', nameContains:'amur'} },
+  { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'vodafone', amountMin:12, amountMax:13} },
   { id:'b_wifi',    emoji:'📶', name:'WiFi',            amount:12.600,  day:1,  cat:'bills' },
-  { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.846,   day:17, cat:'bills' },
-  { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.381,   day:1,  cat:'bills' },
-  { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.691,   day:23, cat:'bills' },
-  { id:'b_tod',     emoji:'📺', name:'TOD 4K',          amount:10.395,  day:28, cat:'bills' },
-  { id:'b_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:7.700,   day:2,  cat:'bills',   startsMonth:'2026-06' },
-  { id:'b_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,   day:25, cat:'bills' },
+  { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.956,   day:17, cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:3.5, amountMax:4.5} },
+  { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.788,   day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:0.1, amountMax:1.5} },
+  { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.768,   day:23, cat:'bills',   smsMatch:{type:'card', merchantContains:'apple.com', amountMin:1.6, amountMax:3.4} },
+  { id:'b_tod',     emoji:'📺', name:'TOD 4K',          amount:10.696,  day:1,  cat:'bills',   smsMatch:{type:'card', merchantContains:'tod', amountMin:10, amountMax:12} },
+  { id:'b_chatgpt', emoji:'🤖', name:'ChatGPT Plus',    amount:7.700,   day:2,  cat:'bills',   startsMonth:'2026-06', smsMatch:{type:'card', merchantContains:'openai', amountMin:7, amountMax:9} },
+  { id:'b_xbox',    emoji:'🎮', name:'Xbox Game Pass',  amount:3.500,   day:25, cat:'bills',   smsMatch:{type:'card', merchantContains:'microsoft', amountMin:3, amountMax:4} },
+  { id:'b_talabat', emoji:'🛵', name:'Talabat Pro',     amount:2.000,   day:3,  cat:'food',    smsMatch:{type:'card', merchantContains:'talabat', amountMin:1.5, amountMax:2.5} },
 ];
 
 const UPCOMING = [
@@ -422,7 +423,7 @@ const SEEDS = [
   { id:'s3',  type:'income',  desc:'Salary',                 amount:736.000, cat:'income',    date:'2026-05-20' },
   { id:'s4',  type:'expense', desc:'Loan Payment 1',         amount:255.893, cat:'loans',     date:'2026-05-20' },
   { id:'s5',  type:'expense', desc:'Loan Payment 2',         amount:97.081,  cat:'loans',     date:'2026-05-20' },
-  { id:'s6',  type:'expense', desc:'AMUR Transfer',          amount:36.300,  cat:'other',     date:'2026-05-20' },
+  { id:'s6',  type:'expense', desc:'AMUR Transfer',          amount:31.000,  cat:'other',     date:'2026-05-20' },
   { id:'s7',  type:'expense', desc:'MSAKHAM QURUM',          amount:2.520,   cat:'food',      date:'2026-05-20' },
   { id:'s8',  type:'expense', desc:'Savings Transfer',       amount:1.000,   cat:'other',     date:'2026-05-20' },
   { id:'s9',  type:'income',  desc:'Received from Shamsa',   amount:3.000,   cat:'income',    date:'2026-05-21' },
@@ -526,14 +527,23 @@ function parseSMS(raw, id, timestamp) {
   let m;
   // Card used for
   m = raw.match(/used for OMR ([\d.]+) at (.+?) on/);
-  if (m) { tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc=cleanDesc(m[2]); tx.cat=guessCat(m[2]); return tx; }
+  if (m) {
+    tx.type='expense'; tx.amount=parseFloat(m[1]);
+    tx.desc=cleanDesc(m[2]); tx.cat=guessCat(m[2]);
+    // Try auto-match to a recurring bill
+    autoMatchBill('card', m[2], parseFloat(m[1]), tx.id, tx.date);
+    return tx;
+  }
   // Sent to
   m = raw.match(/You have sent OMR ([\d.]+) to (.+?) from/);
   if (m) {
     const desc = m[2].trim();
     if (desc.toUpperCase().includes('MUHA') && desc.toUpperCase().includes('HSAN')) { tx.desc='Barbershop'; tx.cat='personal'; }
     else { tx.desc='Sent to '+cleanDesc(desc); tx.cat='other'; }
-    tx.type='expense'; tx.amount=parseFloat(m[1]); return tx;
+    tx.type='expense'; tx.amount=parseFloat(m[1]);
+    // Try auto-match to a recurring bill (e.g. AMUR)
+    autoMatchBill('sent', desc, parseFloat(m[1]), tx.id, tx.date);
+    return tx;
   }
   // Own account transfer — skip
   m = raw.match(/OMR ([\d.]+) is debited from your A\/C (.+?) and credited to your A\/C (.+?) on/);
@@ -585,6 +595,46 @@ function autoCheckUpcoming(sender, amount) {
     }
   });
   save(d);
+}
+
+function autoMatchBill(type, merchant, amount, txId, date) {
+  // Try to match this transaction to a recurring bill and auto-mark it paid
+  const d = load();
+  const monthK = date ? date.substring(0,7) : mk();
+  d.bills[monthK] = d.bills[monthK] || {};
+  let matched = false;
+  BILLS.forEach(b => {
+    if (!b.smsMatch) return;
+    if (d.bills[monthK][b.id]) return; // already marked paid
+    const rule = b.smsMatch;
+    // Check type
+    if (rule.type === 'card' && type !== 'card') return;
+    if (rule.type === 'sent' && type !== 'sent') return;
+    // Check merchant/name
+    const text = (merchant||'').toLowerCase();
+    if (rule.merchantContains && !text.includes(rule.merchantContains.toLowerCase())) return;
+    if (rule.nameContains && !text.includes(rule.nameContains.toLowerCase())) return;
+    // Check amount range
+    if (rule.amountMin && amount < rule.amountMin) return;
+    if (rule.amountMax && amount > rule.amountMax) return;
+    // Match! Mark as paid and add bill transaction
+    d.bills[monthK][b.id] = true;
+    const billTxId = 'bill_tx_' + b.id + '_' + monthK;
+    if (!d.txs.some(t => t.id === billTxId)) {
+      d.txs.push({
+        id: billTxId,
+        type: 'expense',
+        desc: b.name,
+        amount: amount, // use actual SMS amount
+        cat: b.cat,
+        date: date || today(),
+        source: 'bill'
+      });
+    }
+    matched = true;
+  });
+  if (matched) save(d);
+  return matched;
 }
 
 // ── FIREBASE ─────────────────────────────────────────────────
