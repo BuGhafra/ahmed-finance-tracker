@@ -259,11 +259,11 @@ input[type=range]{padding:0;height:6px;border-radius:0;background:var(--surface2
 
 <script>
 // Force wipe all old data
-(function(){ for(let i=0;i<=17;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
+(function(){ for(let i=0;i<=18;i++) localStorage.removeItem('ahmedFinanceV'+i); })();
 
 const FIREBASE_URL = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const USD_TO_OMR = 0.385;
-const CURRENT_VERSION = 'ahmedFinanceV18';
+const CURRENT_VERSION = 'ahmedFinanceV19';
 
 // Daily limits — active from June 2026 onwards
 const DAILY_LIMITS = { weekday: 5, weekend: 12 };
@@ -476,7 +476,14 @@ function showSyncBar(){const bar=document.getElementById('syncBar');bar.classLis
 async function refreshData(){
   const smsTxs=await fetchSMSTransactions();
   const local=loadLocal();
-  allTransactions=[...smsTxs,...local.transactions];
+  // Merge and deduplicate by id — seeds take priority over SMS
+  const seen=new Set();
+  const merged=[];
+  for(const t of [...local.transactions,...smsTxs]){
+    const key=String(t.id);
+    if(!seen.has(key)){seen.add(key);merged.push(t);}
+  }
+  allTransactions=merged;
   renderHome();renderTx();
 }
 
@@ -560,19 +567,27 @@ function toggleUpcoming(id){
   const was=!!d.upcoming[mk][id];
   const tmpl=UPCOMING_TEMPLATES.find(t=>t.id===id);if(!tmpl) return;
   const txId='upcoming_'+id+'_'+mk;
-  // Covered by seed = already in seeds for this month (e.g. Rashid in May)
-  const coveredBySeed=d.transactions.some(t=>t.source==='seed'&&t.type==='income'&&Math.abs(t.amount-tmpl.amount)<0.01&&(t.date||'').startsWith(mk));
+  // Check if this income is already covered by a seed transaction
+  const coveredBySeed=d.transactions.some(t=>
+    t.source==='seed' && t.type==='income' &&
+    Math.abs(t.amount-tmpl.amount)<0.01 &&
+    (t.date||'').startsWith(mk)
+  );
   if(!was){
+    // Mark as received
     d.upcoming[mk][id]=true;
     if(!coveredBySeed){
+      // Only add a transaction if not already in seeds
       d.transactions=d.transactions.filter(t=>t.id!==txId);
       d.transactions.push({id:txId,type:'income',desc:tmpl.label,amount:tmpl.amount,category:'income',date:new Date().toISOString().split('T')[0],source:'manual'});
     }
   }else{
+    // Unmark - toggle back to pending
     d.upcoming[mk][id]=false;
     if(!coveredBySeed){
       d.transactions=d.transactions.filter(t=>t.id!==txId);
     }
+    // If covered by seed, just flip the UI state — seed stays, no double counting
   }
   saveLocal(d);refreshData();
 }
@@ -662,10 +677,7 @@ function renderUpcoming(){
     const done=!!state[t.id];
     const coveredBySeed=d.transactions.some(s=>s.source==='seed'&&s.type==='income'&&Math.abs(s.amount-t.amount)<0.01&&(s.date||'').startsWith(mk));
     // If covered by seed and checked, show as locked-received (no onclick to uncheck/re-add)
-    const lockStyle=coveredBySeed&&done?'opacity:.7;cursor:default;':''
-    const clickHandler=coveredBySeed&&done?'':`onclick="toggleUpcoming('${t.id}')"`;
-    const seedNote=coveredBySeed&&done?' <span style="font-size:.6rem;color:var(--muted)">[in seeds]</span>':''
-    return `<div class="upcoming-item"><div class="upcoming-check ${done?'done':'pending'}" ${clickHandler} style="${lockStyle}">${done?'✓':''}</div><div class="upcoming-info"><div class="upcoming-name">${t.label}${seedNote}</div><div class="upcoming-sub">${done?'✅ Received':'⏳ '+t.note}</div></div><div class="upcoming-amount">+${fmt(t.amount)}</div></div>`;
+    return `<div class="upcoming-item"><div class="upcoming-check ${done?'done':'pending'}" onclick="toggleUpcoming('${t.id}')">${done?'✓':''}</div><div class="upcoming-info"><div class="upcoming-name">${t.label}</div><div class="upcoming-sub">${done?'✅ Received':'⏳ '+t.note}</div></div><div class="upcoming-amount">+${fmt(t.amount)}</div></div>`;
   }).join('')+
   `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--dim);display:flex;justify-content:space-between;font-size:.75rem"><span style="color:var(--muted)">Received</span><span style="color:var(--accent);font-family:'Orbitron',monospace">${fmtS(totalR)} / ${fmtS(totalE)}</span></div>`;
 }
