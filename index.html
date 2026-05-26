@@ -597,15 +597,14 @@ function autoCheckUpcoming(sender, amount) {
   save(d);
 }
 
-function autoMatchBill(type, merchant, amount, txId, date) {
-  // Try to match this transaction to a recurring bill and auto-mark it paid
+function autoMatchBill(type, merchant, amount, smsTxId, date) {
+  // Try to match this SMS transaction to a recurring bill and auto-mark it paid
   const d = load();
   const monthK = date ? date.substring(0,7) : mk();
   d.bills[monthK] = d.bills[monthK] || {};
   let matched = false;
   BILLS.forEach(b => {
     if (!b.smsMatch) return;
-    if (d.bills[monthK][b.id]) return; // already marked paid
     const rule = b.smsMatch;
     // Check type
     if (rule.type === 'card' && type !== 'card') return;
@@ -617,20 +616,14 @@ function autoMatchBill(type, merchant, amount, txId, date) {
     // Check amount range
     if (rule.amountMin && amount < rule.amountMin) return;
     if (rule.amountMax && amount > rule.amountMax) return;
-    // Match! Mark as paid and add bill transaction
+    // MATCH FOUND
+    // Mark bill as paid
     d.bills[monthK][b.id] = true;
-    const billTxId = 'bill_tx_' + b.id + '_' + monthK;
-    if (!d.txs.some(t => t.id === billTxId)) {
-      d.txs.push({
-        id: billTxId,
-        type: 'expense',
-        desc: b.name,
-        amount: amount, // use actual SMS amount
-        cat: b.cat,
-        date: date || today(),
-        source: 'bill'
-      });
-    }
+    // Remove any manually-added bill transaction (to avoid double count)
+    const manualBillTxId = 'bill_tx_' + b.id + '_' + monthK;
+    d.txs = d.txs.filter(t => t.id !== manualBillTxId);
+    // The SMS transaction itself (smsTxId) will be the expense — don't add another one
+    // Just update its description to match the bill name for clarity
     matched = true;
   });
   if (matched) save(d);
@@ -830,22 +823,32 @@ function toggleBill(id) {
   const txId = 'bill_tx_' + id + '_' + k;
 
   if (!wasPaid) {
-    // Mark as PAID
+    // Mark as PAID manually
     d.bills[k][id] = true;
-    // Always add a transaction UNLESS this bill ID's transaction already exists
-    // (seeds cover loan1, loan2, amur — they have different IDs so no collision)
-    d.txs = d.txs.filter(t => t.id !== txId); // remove if exists
-    d.txs.push({
-      id: txId,
-      type: 'expense',
-      desc: bill.name,
-      amount: bill.amount,
-      cat: bill.cat,
-      date: today(),
-      source: 'bill'
-    });
+    // Check if an SMS transaction already covers this bill this month
+    // (SMS transaction for this bill would have been auto-matched)
+    const smsAlreadyCovered = allTxs.some(t =>
+      t.source === 'sms' &&
+      t.type === 'expense' &&
+      Math.abs(t.amount - bill.amount) < 0.5 &&
+      (t.date||'').startsWith(k)
+    );
+    if (!smsAlreadyCovered) {
+      // No SMS yet — add manual transaction
+      d.txs = d.txs.filter(t => t.id !== txId);
+      d.txs.push({
+        id: txId,
+        type: 'expense',
+        desc: bill.name,
+        amount: bill.amount,
+        cat: bill.cat,
+        date: today(),
+        source: 'bill'
+      });
+    }
+    // If SMS already covered it, just mark paid with no extra transaction
   } else {
-    // Mark as UNPAID — remove transaction
+    // Mark as UNPAID — remove manual transaction only (don't remove SMS)
     d.bills[k][id] = false;
     d.txs = d.txs.filter(t => t.id !== txId);
   }
@@ -1128,7 +1131,6 @@ function goTo(page) {
 // ── CLEAN BILL STATES ────────────────────────────────────────
 function cleanBillStates() {
   // Remove any bill paid states for months OTHER than May 2026
-  // (prevents accidental clicks from corrupting other months)
   const d = load();
   let changed = false;
   Object.keys(d.bills).forEach(monthK => {
@@ -1136,6 +1138,16 @@ function cleanBillStates() {
       delete d.bills[monthK];
       changed = true;
     }
+  });
+  // Deduplicate transactions: remove duplicate bill_tx entries where SMS also covers same bill
+  // Keep only one transaction per bill per month
+  const billTxIds = new Set();
+  d.txs = d.txs.filter(t => {
+    if (!String(t.id).startsWith('bill_tx_')) return true;
+    const key = String(t.id);
+    if (billTxIds.has(key)) { changed = true; return false; }
+    billTxIds.add(key);
+    return true;
   });
   if (changed) save(d);
 }
