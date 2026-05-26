@@ -387,7 +387,7 @@ const BILLS = [
   { id:'b_loan2',   emoji:'🏦', name:'Loan Payment 2',  amount:97.081,  day:25, monthOffset:0, cat:'loans',  autoDeduct:true },
   { id:'b_amur',    emoji:'💸', name:'AMUR Transfer',   amount:31.000,  day:15, monthOffset:1, cat:'other',  smsMatch:{type:'sent', nameContains:'amur'} },
   { id:'b_voda',    emoji:'📱', name:'Vodafone',        amount:12.600,  day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'vodafone', amountMin:12, amountMax:13} },
-  { id:'b_wifi',    emoji:'📶', name:'WiFi',            amount:12.600,  day:1,  monthOffset:1, cat:'bills' },
+  { id:'b_wifi',    emoji:'📶', name:'WiFi (AWASR)',    amount:36.600,  day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'debit', merchantContains:'awasr', amountMin:35, amountMax:38} },
   { id:'b_discord', emoji:'🎮', name:'Discord Nitro',   amount:3.956,   day:17, monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:3.5, amountMax:4.5} },
   { id:'b_icloud',  emoji:'☁️', name:'iCloud+',        amount:0.788,   day:1,  monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:0.1, amountMax:1.5} },
   { id:'b_ytmusic', emoji:'🎵', name:'YouTube Music',   amount:2.768,   day:23, monthOffset:1, cat:'bills',  smsMatch:{type:'card', merchantContains:'apple.com', amountMin:1.6, amountMax:3.4} },
@@ -567,6 +567,16 @@ function parseSMS(raw, id, timestamp) {
   if (m) { tx.type='income'; tx.amount=parseFloat(m[1]); tx.desc='Salary'; tx.cat='income'; return tx; }
   // Reversed — skip
   if (raw.includes('reversed and credited')) return null;
+  // AWASR / bill payment format: "debited for an amount of OMR X as payment towards Y"
+  m = raw.match(/debited for an amount of OMR ([\d.]+) as payment towards (.+)/i);
+  if (m) {
+    tx.type='expense'; tx.amount=parseFloat(m[1]);
+    const merchant = m[2].trim();
+    tx.desc = cleanDesc(merchant);
+    tx.cat = 'bills';
+    autoMatchBill('debit', merchant, parseFloat(m[1]), tx.id, tx.date);
+    return tx;
+  }
   // Monthly installment debit
   m = raw.match(/OMR ([\d.]+) is debited from your a\/c.+monthly installment/i);
   if (m) { tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc='Loan Installment'; tx.cat='loans'; return tx; }
@@ -610,6 +620,7 @@ function autoMatchBill(type, merchant, amount, smsTxId, date) {
     // Check type
     if (rule.type === 'card' && type !== 'card') return;
     if (rule.type === 'sent' && type !== 'sent') return;
+    if (rule.type === 'debit' && type !== 'debit') return;
     // Check merchant/name
     const text = (merchant||'').toLowerCase();
     if (rule.merchantContains && !text.includes(rule.merchantContains.toLowerCase())) return;
