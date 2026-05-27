@@ -377,7 +377,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────
-const VERSION = 'vaultV2';
+const VERSION = 'vaultV3';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const SALARY = 736;
 
@@ -471,7 +471,7 @@ function load() {
 function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 
 function wipeOld() {
-  const old = ['vaultV1','ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
+  const old = ['vaultV2','vaultV1','ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
     'ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7','ahmedFinanceV8','ahmedFinanceV9',
     'ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12','ahmedFinanceV13','ahmedFinanceV14',
     'ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17','ahmedFinanceV18','ahmedFinanceV19'];
