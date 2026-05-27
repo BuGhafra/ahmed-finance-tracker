@@ -377,7 +377,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────
-const VERSION = 'vaultV1';
+const VERSION = 'vaultV2';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const SALARY = 736;
 
@@ -471,7 +471,7 @@ function load() {
 function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 
 function wipeOld() {
-  const old = ['ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
+  const old = ['vaultV1','ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
     'ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7','ahmedFinanceV8','ahmedFinanceV9',
     'ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12','ahmedFinanceV13','ahmedFinanceV14',
     'ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17','ahmedFinanceV18','ahmedFinanceV19'];
@@ -577,9 +577,10 @@ function parseSMS(raw, id, timestamp) {
     autoMatchBill('debit', merchant, parseFloat(m[1]), tx.id, tx.date);
     return tx;
   }
-  // Monthly installment debit
-  m = raw.match(/OMR ([\d.]+) is debited from your a\/c.+monthly installment/i);
-  if (m) { tx.type='expense'; tx.amount=parseFloat(m[1]); tx.desc='Loan Installment'; tx.cat='loans'; return tx; }
+  // Monthly installment debit — SKIP, already covered by seeds
+  if (/monthly installment/i.test(raw)) return null;
+  // Loan debit notification — SKIP
+  if (/255.893|97.081/.test(raw)) return null;
   return null;
 }
 
