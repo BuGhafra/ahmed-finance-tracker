@@ -669,18 +669,14 @@ async function fetchFirebase() {
     const data = await res.json();
     if (!data) return [];
     const d = load();
-    // Build set of all known IDs (seeds + manual)
+    // Only skip IDs we've already stored locally
     const knownIds = new Set(d.txs.map(t => String(t.id)));
-    // Build fingerprint set from seeds to block duplicates
-    const fps = new Set(SEEDS.map(s => s.date+'|'+s.amount.toFixed(3)+'|'+s.type));
     const result = [];
     Object.entries(data).forEach(([fbId, entry]) => {
       const id = 'sms_'+fbId;
-      if (knownIds.has(id)) return;
+      if (knownIds.has(id)) return; // already processed
       const parsed = parseSMS(entry.rawMessage, id, entry.timestamp);
-      if (!parsed) return;
-      const fp = parsed.date+'|'+parsed.amount.toFixed(3)+'|'+parsed.type;
-      if (fps.has(fp)) return; // duplicate of a seed
+      if (!parsed) return; // null = ignored (loan, OTP, own transfer etc)
       result.push(parsed);
     });
     if (result.length > lastFirebaseCount && lastFirebaseCount > 0) showSyncBar();
@@ -699,10 +695,21 @@ function showSyncBar() {
 async function refresh() {
   const smsTxs = await fetchFirebase();
   const d = load();
-  // Merge: seeds/manual first, then SMS. Deduplicate by ID.
+  // Save new SMS transactions to local storage so next refresh deduplicates by ID
+  if (smsTxs.length > 0) {
+    const existingIds = new Set(d.txs.map(t => String(t.id)));
+    smsTxs.forEach(t => {
+      if (!existingIds.has(String(t.id))) {
+        d.txs.push(t);
+        existingIds.add(String(t.id));
+      }
+    });
+    save(d);
+  }
+  // Merge all for display, deduplicate by ID
   const seen = new Set();
   const merged = [];
-  for (const t of [...d.txs, ...smsTxs]) {
+  for (const t of d.txs) {
     const key = String(t.id);
     if (!seen.has(key)) { seen.add(key); merged.push(t); }
   }
