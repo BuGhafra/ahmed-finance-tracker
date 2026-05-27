@@ -562,9 +562,28 @@ function parseSMS(raw, id, timestamp) {
     autoCheckUpcoming(m[2], parseFloat(m[1]));
     return tx;
   }
-  // Salary
+  // Salary — also auto-mark loans as paid (deducted same moment)
   m = raw.match(/Salary OMR ([\d.]+)/);
-  if (m) { tx.type='income'; tx.amount=parseFloat(m[1]); tx.desc='Salary'; tx.cat='income'; return tx; }
+  if (m) {
+    tx.type='income'; tx.amount=parseFloat(m[1]); tx.desc='Salary'; tx.cat='income';
+    // Auto-mark loan bills as paid for this month
+    const d = load();
+    const monthK = tx.date ? tx.date.substring(0,7) : mk();
+    d.bills[monthK] = d.bills[monthK] || {};
+    d.bills[monthK]['b_loan1'] = true;
+    d.bills[monthK]['b_loan2'] = true;
+    // Add loan expense transactions if not already there
+    ['b_loan1','b_loan2'].forEach(lid => {
+      const bill = BILLS.find(b => b.id === lid);
+      if (!bill) return;
+      const billTxId = 'bill_tx_' + lid + '_' + monthK;
+      if (!d.txs.some(t => t.id === billTxId)) {
+        d.txs.push({ id:billTxId, type:'expense', desc:bill.name, amount:bill.amount, cat:bill.cat, date:tx.date||today(), source:'bill' });
+      }
+    });
+    save(d);
+    return tx;
+  }
   // Reversed — skip
   if (raw.includes('reversed and credited')) return null;
   // AWASR / bill payment format: "debited for an amount of OMR X as payment towards Y"
