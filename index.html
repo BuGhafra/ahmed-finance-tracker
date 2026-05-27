@@ -377,7 +377,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────
-const VERSION = 'vaultV4';
+const VERSION = 'vaultV5';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 const SALARY = 736;
 
@@ -486,7 +486,7 @@ function load() {
 function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 
 function wipeOld() {
-  const old = ['vaultV3','vaultV2','vaultV1','ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
+  const old = ['vaultV4','vaultV3','vaultV2','vaultV1','ahmedFinanceV1','ahmedFinanceV2','ahmedFinanceV3','ahmedFinanceV4',
     'ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7','ahmedFinanceV8','ahmedFinanceV9',
     'ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12','ahmedFinanceV13','ahmedFinanceV14',
     'ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17','ahmedFinanceV18','ahmedFinanceV19'];
@@ -507,6 +507,8 @@ function initSeeds() {
   d.bills['2026-05']['b_ytmusic'] = true;
   d.bills['2026-05']['b_xbox']    = true;
   d.bills['2026-05']['b_amur']    = true; // AMUR was in seeds May 20
+  d.bills['2026-05']['b_wifi']    = true; // AWASR paid
+  d.bills['2026-05']['b_voda']    = true; // Vodafone paid
   // Pre-mark upcoming income received in May
   d.upcoming['2026-05'] = d.upcoming['2026-05'] || {};
   d.upcoming['2026-05']['u_rashid'] = true;
