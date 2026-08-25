@@ -285,7 +285,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const VERSION = 'vaultAug2';
+const VERSION = 'vaultAug3';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 
 // ── BILLS ────────────────────────────────────────────────────
@@ -330,7 +330,11 @@ const CATS = {
 // Rashid already received: +200.000
 // Salary not yet arrived as of rebuild time
 const SEEDS = [
-  { id:'aug_s0', type:'income',  desc:'Opening Balance', amount:200.528, cat:'income', date:'2026-08-25' },
+  { id:'aug_s0', type:'income',  desc:'Opening Balance',   amount:200.528, cat:'income',  date:'2026-08-25' },
+  { id:'aug_s1', type:'income',  desc:'Salary',            amount:736.000, cat:'income',  date:'2026-08-25' },
+  { id:'aug_s2', type:'expense', desc:'Loan Payment 1',    amount:255.893, cat:'loans',   date:'2026-08-25' },
+  { id:'aug_s3', type:'expense', desc:'Loan Payment 2',    amount:97.081,  cat:'loans',   date:'2026-08-25' },
+  { id:'aug_s4', type:'expense', desc:'Xbox Game Pass',    amount:3.500,   cat:'bills',   date:'2026-08-25' },
 ];
 
 // ── STATE ────────────────────────────────────────────────────
@@ -348,7 +352,7 @@ function load() {
 }
 function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 function wipeOld() {
-  ['vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
+  ['vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
    'ahmedFinanceV3','ahmedFinanceV4','ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7',
    'ahmedFinanceV8','ahmedFinanceV9','ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12',
    'ahmedFinanceV13','ahmedFinanceV14','ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17',
@@ -364,6 +368,7 @@ function initSeeds() {
   d.bills['2026-08'] = d.bills['2026-08'] || {};
   d.bills['2026-08']['b_loan1'] = true;
   d.bills['2026-08']['b_loan2'] = true;
+  d.bills['2026-08']['b_xbox']  = true;
   // Pre-mark Rashid as received
   d.upcoming['2026-08'] = d.upcoming['2026-08'] || {};
   d.upcoming['2026-08']['u_rashid'] = true;
