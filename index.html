@@ -285,7 +285,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const VERSION = 'vaultAug3';
+const VERSION = 'vaultAug4';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 
 // ── BILLS ────────────────────────────────────────────────────
@@ -352,7 +352,7 @@ function load() {
 }
 function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
 function wipeOld() {
-  ['vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
+  ['vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
    'ahmedFinanceV3','ahmedFinanceV4','ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7',
    'ahmedFinanceV8','ahmedFinanceV9','ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12',
    'ahmedFinanceV13','ahmedFinanceV14','ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17',
@@ -695,7 +695,11 @@ function renderSavings(balance) {
     if (!hasTx) billsLeft+=b.amount;
   });
   const afterSavings=balance-savAmt;
+  // Spendable = after savings and remaining bills
   const spendable=afterSavings-billsLeft;
+  // Today's personal spending (for daily limit display)
+  const todayStr=today();
+  const todayPersonal=allTxs.filter(t=>t.date===todayStr&&isDailySpend(t)).reduce((s,t)=>s+t.amount,0);
   const daysLeft=daysRemainingInMonth();
   const workdays=workdaysLeft();
   const weekendDays=Math.max(0,daysLeft-workdays);
@@ -747,19 +751,30 @@ function workdaysLeft() {
 
 // ── DAILY LIMIT NOTIFICATION ──────────────────────────────────
 let todaySpent=0;
+// Categories that count toward daily personal spending limit
+const DAILY_LIMIT_CATS = ['food','social','personal','other','gaming'];
+
+function isDailySpend(t) {
+  if (t.type !== 'expense') return false;
+  if (t.excludeDaily) return false; // manually excluded
+  return DAILY_LIMIT_CATS.includes(t.cat||'other');
+}
+
 function checkDailyLimit(weekdayLimit, weekendLimit) {
   const now=new Date();
-  const day=now.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  const day=now.getDay();
   const isWeekend=(day>=4); // Thu-Sat
   const limit=isWeekend?weekendLimit:weekdayLimit;
   if (limit<=0) return;
   const todayStr=today();
-  todaySpent=allTxs.filter(t=>t.date===todayStr&&t.type==='expense'&&t.cat!=='saving'&&t.cat!=='loans').reduce((s,t)=>s+t.amount,0);
-  if (todaySpent>=limit&&'Notification' in window.Notification) {
-    if (Notification.permission==='granted') {
-      new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)} / Limit: ${fmtS(limit)}`,icon:''});
-    } else if (Notification.permission!=='denied') {
-      Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)}`}); });
+  todaySpent=allTxs.filter(t=>t.date===todayStr&&isDailySpend(t)).reduce((s,t)=>s+t.amount,0);
+  if (todaySpent>=limit&&'Notification' in window) {
+    if (typeof Notification !== 'undefined') {
+      if (Notification.permission==='granted') {
+        new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)} / Limit: ${fmtS(limit)}`});
+      } else if (Notification.permission!=='denied') {
+        Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)} / Limit: ${fmtS(limit)}`}); });
+      }
     }
   }
 }
@@ -779,10 +794,13 @@ function renderTx() {
     const cat=CATS[t.cat||'other']||CATS.other;
     const isInc=t.type==='income';
     const tag=t.source==='sms'?'SMS':t.source==='bill'?'BILL':t.source==='seed'?'':t.source==='manual'?'MAN':'';
+    const isExcluded = !!t.excludeDaily;
+    const canExclude = !isInc && t.cat !== 'loans' && t.cat !== 'saving' && t.cat !== 'bills';
+    const excludeBtn = canExclude ? `<button onclick="toggleExclude('${t.id}')" style="font-size:.55rem;padding:2px 6px;border:1px solid ${isExcluded?'var(--accent)':'var(--dim)'};background:none;color:${isExcluded?'var(--accent)':'var(--muted)'};border-radius:2px;cursor:pointer;margin-top:3px;font-family:'Share Tech Mono',monospace">${isExcluded?'✓ EXCLUDED':'EXCLUDE'}</button>` : '';
     return `<div class="tx-item">
-      <div class="tx-icon">${cat.emoji}</div>
-      <div class="tx-info"><div class="tx-name">${t.desc||'Transaction'}${tag?`<span class="tx-tag">${tag}</span>`:''}</div><div class="tx-cat">${cat.label}</div></div>
-      <div class="tx-amt ${isInc?'inc':'exp'}">${isInc?'+':'-'}${fmt(t.amount)}</div>
+      <div class="tx-icon" style="${isExcluded?'opacity:.5':''}">${cat.emoji}</div>
+      <div class="tx-info"><div class="tx-name">${t.desc||'Transaction'}${tag?`<span class="tx-tag">${tag}</span>`:''}</div><div class="tx-cat">${cat.label}</div>${excludeBtn}</div>
+      <div class="tx-amt ${isInc?'inc':'exp'}" style="${isExcluded?'opacity:.5;text-decoration:line-through':''}">${isInc?'+':'-'}${fmt(t.amount)}</div>
     </div>`;
   }).join('');
 }
@@ -842,6 +860,16 @@ function addTx() {
   save(d); closeModal();
   document.getElementById('txAmt').value='';
   document.getElementById('txDesc').value='';
+  refresh();
+}
+
+// ── EXCLUDE FROM DAILY LIMIT ─────────────────────────────────
+function toggleExclude(id) {
+  const d = load();
+  const tx = d.txs.find(t => String(t.id) === String(id));
+  if (!tx) return;
+  tx.excludeDaily = !tx.excludeDaily;
+  save(d);
   refresh();
 }
 
