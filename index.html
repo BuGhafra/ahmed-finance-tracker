@@ -285,7 +285,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const VERSION = 'vaultAug9';
+const VERSION = 'vaultAug11';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 
 // ── BILLS ────────────────────────────────────────────────────
@@ -354,6 +354,9 @@ const SEEDS = [
   { id:'aug_s19', type:'income',  desc:'Received from Father',    amount:37.000,  cat:'income',  date:'2026-08-26' },
   { id:'aug_s20', type:'expense', desc:'Sent to Shamsa (WiFi)',   amount:12.000,  cat:'bills',   date:'2026-08-26' },
   { id:'aug_s21', type:'expense', desc:'OPENSOOQ AL GHUBRA',      amount:0.920,   cat:'other',   date:'2026-08-26' },
+  { id:'aug_s22', type:'expense', desc:'WiFi (AWASR)',             amount:36.500,  cat:'bills',   date:'2026-08-26' },
+  { id:'aug_s23', type:'expense', desc:'Sent to MOHA ALI',         amount:20.000,  cat:'other',   date:'2026-08-26' },
+  { id:'aug_s24', type:'expense', desc:'Sent to AHME AMED',        amount:2.030,   cat:'other',   date:'2026-08-26' },
 ];
 
 // ── STATE ────────────────────────────────────────────────────
@@ -390,7 +393,7 @@ function save(d) {
   saveUpcomingState(d.upcoming||{});
 }
 function wipeOld() {
-  ['vaultAug8','vaultAug7','vaultAug6','vaultAug5','vaultAug4','vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
+  ['vaultAug10','vaultAug9','vaultAug8','vaultAug7','vaultAug6','vaultAug5','vaultAug4','vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
    'ahmedFinanceV3','ahmedFinanceV4','ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7',
    'ahmedFinanceV8','ahmedFinanceV9','ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12',
    'ahmedFinanceV13','ahmedFinanceV14','ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17',
@@ -410,6 +413,7 @@ function initSeeds() {
   d.bills['2026-08']['b_ytmusic'] = true; // Apple 2.768 Aug 26
   d.bills['2026-08']['b_voda']    = true; // Vodafone 12.600 Aug 26
   d.bills['2026-08']['b_amur']    = true; // AMUR 31.000 Aug 26
+  d.bills['2026-08']['b_wifi']    = true; // AWASR 36.500 Aug 26
   // Pre-mark Rashid as received
   d.upcoming['2026-08'] = d.upcoming['2026-08'] || {};
   d.upcoming['2026-08']['u_rashid'] = true;
@@ -949,4 +953,3 @@ setInterval(refresh, 30000);
 </script>
 </body>
 </html>
-
