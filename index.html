@@ -285,7 +285,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const VERSION = 'vaultAug4';
+const VERSION = 'vaultAug9';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
 
 // ── BILLS ────────────────────────────────────────────────────
@@ -330,11 +330,30 @@ const CATS = {
 // Rashid already received: +200.000
 // Salary not yet arrived as of rebuild time
 const SEEDS = [
-  { id:'aug_s0', type:'income',  desc:'Opening Balance',   amount:200.528, cat:'income',  date:'2026-08-25' },
-  { id:'aug_s1', type:'income',  desc:'Salary',            amount:736.000, cat:'income',  date:'2026-08-25' },
-  { id:'aug_s2', type:'expense', desc:'Loan Payment 1',    amount:255.893, cat:'loans',   date:'2026-08-25' },
-  { id:'aug_s3', type:'expense', desc:'Loan Payment 2',    amount:97.081,  cat:'loans',   date:'2026-08-25' },
-  { id:'aug_s4', type:'expense', desc:'Xbox Game Pass',    amount:3.500,   cat:'bills',   date:'2026-08-25' },
+  // ── Aug 25 ──────────────────────────────────────────────────
+  { id:'aug_s0',  type:'income',  desc:'Opening Balance',        amount:200.528, cat:'income',  date:'2026-08-25' },
+  { id:'aug_s1',  type:'income',  desc:'Salary',                 amount:736.000, cat:'income',  date:'2026-08-25' },
+  { id:'aug_s2',  type:'expense', desc:'Loan Payment 1',         amount:255.893, cat:'loans',   date:'2026-08-25' },
+  { id:'aug_s3',  type:'expense', desc:'Loan Payment 2',         amount:97.081,  cat:'loans',   date:'2026-08-25' },
+  { id:'aug_s4',  type:'expense', desc:'Xbox Game Pass',         amount:3.500,   cat:'bills',   date:'2026-08-25' },
+  { id:'aug_s5',  type:'expense', desc:'Savings Deposit (Loan)', amount:165.000, cat:'saving',  date:'2026-08-25' },
+  { id:'aug_s6',  type:'expense', desc:'eToro Investment',       amount:85.000,  cat:'saving',  date:'2026-08-25' },
+  { id:'aug_s7',  type:'expense', desc:'McDonalds',              amount:3.020,   cat:'food',    date:'2026-08-25' },
+  { id:'aug_s8',  type:'expense', desc:'Gift (MUHA)',            amount:48.000,  cat:'social',  date:'2026-08-25' },
+  { id:'aug_s9',  type:'income',  desc:'Received from Father',   amount:48.000,  cat:'income',  date:'2026-08-25' },
+  // ── Aug 26 ──────────────────────────────────────────────────
+  { id:'aug_s10', type:'expense', desc:'YouTube Music',          amount:2.768,   cat:'bills',   date:'2026-08-26' },
+  { id:'aug_s11', type:'expense', desc:'Tea Time',               amount:1.050,   cat:'food',    date:'2026-08-26' },
+  { id:'aug_s12', type:'expense', desc:'Vodafone',               amount:12.600,  cat:'bills',   date:'2026-08-26' },
+  { id:'aug_s13', type:'expense', desc:'AMUR Transfer',          amount:31.000,  cat:'other',   date:'2026-08-26' },
+  { id:'aug_s14', type:'income',  desc:'Received from Mother',   amount:12.000,  cat:'income',  date:'2026-08-26' },
+  { id:'aug_s15', type:'expense', desc:'AliExpress',              amount:34.917,  cat:'social',  date:'2026-08-26' },
+  { id:'aug_s16', type:'expense', desc:'GF Birthday Gift (APM)',  amount:82.000,  cat:'social',  date:'2026-08-26', excludeDaily:true },
+  { id:'aug_s17', type:'income',  desc:'Received from Shamsa',    amount:12.000,  cat:'income',  date:'2026-08-26' },
+  { id:'aug_s18', type:'expense', desc:'Modern Symbols Service',  amount:2.500,   cat:'other',   date:'2026-08-26' },
+  { id:'aug_s19', type:'income',  desc:'Received from Father',    amount:37.000,  cat:'income',  date:'2026-08-26' },
+  { id:'aug_s20', type:'expense', desc:'Sent to Shamsa (WiFi)',   amount:12.000,  cat:'bills',   date:'2026-08-26' },
+  { id:'aug_s21', type:'expense', desc:'OPENSOOQ AL GHUBRA',      amount:0.920,   cat:'other',   date:'2026-08-26' },
 ];
 
 // ── STATE ────────────────────────────────────────────────────
@@ -346,13 +365,32 @@ let selCat = 'other';
 let lastFBCount = 0;
 
 // ── STORAGE ──────────────────────────────────────────────────
+const BILLS_KEY = 'vaultBillsState';
+const UPCOMING_KEY = 'vaultUpcomingState';
+function loadBillsState() { try { return JSON.parse(localStorage.getItem(BILLS_KEY))||{}; } catch(e){ return {}; } }
+function saveBillsState(s) { localStorage.setItem(BILLS_KEY, JSON.stringify(s)); }
+function loadUpcomingState() { try { return JSON.parse(localStorage.getItem(UPCOMING_KEY))||{}; } catch(e){ return {}; } }
+function saveUpcomingState(s) { localStorage.setItem(UPCOMING_KEY, JSON.stringify(s)); }
+
 function load() {
   const def = { txs:[], bills:{}, upcoming:{}, savings:{} };
-  try { return JSON.parse(localStorage.getItem(VERSION)) || def; } catch(e) { return def; }
+  try {
+    const d = JSON.parse(localStorage.getItem(VERSION)) || def;
+    // Merge persistent bills/upcoming state — survives version bumps
+    const pb = loadBillsState();
+    const pu = loadUpcomingState();
+    Object.keys(pb).forEach(k => { d.bills[k]=d.bills[k]||{}; Object.assign(d.bills[k], pb[k]); });
+    Object.keys(pu).forEach(k => { d.upcoming[k]=d.upcoming[k]||{}; Object.assign(d.upcoming[k], pu[k]); });
+    return d;
+  } catch(e) { return def; }
 }
-function save(d) { localStorage.setItem(VERSION, JSON.stringify(d)); }
+function save(d) {
+  localStorage.setItem(VERSION, JSON.stringify(d));
+  saveBillsState(d.bills||{});
+  saveUpcomingState(d.upcoming||{});
+}
 function wipeOld() {
-  ['vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
+  ['vaultAug8','vaultAug7','vaultAug6','vaultAug5','vaultAug4','vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
    'ahmedFinanceV3','ahmedFinanceV4','ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7',
    'ahmedFinanceV8','ahmedFinanceV9','ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12',
    'ahmedFinanceV13','ahmedFinanceV14','ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17',
@@ -366,12 +404,17 @@ function initSeeds() {
   d.txs = [...SEEDS, ...d.txs];
   // Pre-mark August bills
   d.bills['2026-08'] = d.bills['2026-08'] || {};
-  d.bills['2026-08']['b_loan1'] = true;
-  d.bills['2026-08']['b_loan2'] = true;
-  d.bills['2026-08']['b_xbox']  = true;
+  d.bills['2026-08']['b_loan1']   = true;
+  d.bills['2026-08']['b_loan2']   = true;
+  d.bills['2026-08']['b_xbox']    = true;
+  d.bills['2026-08']['b_ytmusic'] = true; // Apple 2.768 Aug 26
+  d.bills['2026-08']['b_voda']    = true; // Vodafone 12.600 Aug 26
+  d.bills['2026-08']['b_amur']    = true; // AMUR 31.000 Aug 26
   // Pre-mark Rashid as received
   d.upcoming['2026-08'] = d.upcoming['2026-08'] || {};
   d.upcoming['2026-08']['u_rashid'] = true;
+  d.upcoming['2026-08']['u_mother'] = true; // Mother sent 12 Aug 26
+  d.upcoming['2026-08']['u_father'] = true; // Father sent 48 Aug 25
   save(d);
 }
 
@@ -906,3 +949,4 @@ setInterval(refresh, 30000);
 </script>
 </body>
 </html>
+
