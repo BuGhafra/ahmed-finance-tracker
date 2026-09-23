@@ -184,7 +184,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
     </div>
   </div>
   <div class="wrap">
-    <div class="uplink" id="uplinkBadge"><span class="uplink-dot"></span>UPLINK ACTIVE // BANK MUSCAT FEED</div>
+    <div class="uplink" id="uplinkBadge" style="cursor:pointer" onclick="if(confirm('Wipe local cache and resync from scratch?')){localStorage.clear();location.reload();}"><span class="uplink-dot"></span>UPLINK ACTIVE // BANK MUSCAT FEED <span style="opacity:.6;font-size:.75em">(tap to reset)</span></div>
     <div class="stat-grid">
       <div class="stat"><div class="stat-lbl">Balance</div><div class="stat-val c-income" id="h-balance">--</div><div class="stat-sub">All accounts</div></div>
       <div class="stat"><div class="stat-lbl">Spent</div><div class="stat-val c-danger" id="h-spent">--</div><div class="stat-sub">This month</div></div>
@@ -285,8 +285,9 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const VERSION = 'vaultSep1';
+const VERSION = 'vaultFreshStart';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
+const SEED_DATE = '2026-09-23'; // ignore any Firebase SMS entries dated before the opening balance snapshot
 
 // ── BILLS ────────────────────────────────────────────────────
 const BILLS = [
@@ -342,8 +343,8 @@ let selCat = 'other';
 let lastFBCount = 0;
 
 // ── STORAGE ──────────────────────────────────────────────────
-const BILLS_KEY = 'vaultBillsState';
-const UPCOMING_KEY = 'vaultUpcomingState';
+const BILLS_KEY = 'vaultBillsStateFresh';
+const UPCOMING_KEY = 'vaultUpcomingStateFresh';
 function loadBillsState() { try { return JSON.parse(localStorage.getItem(BILLS_KEY))||{}; } catch(e){ return {}; } }
 function saveBillsState(s) { localStorage.setItem(BILLS_KEY, JSON.stringify(s)); }
 function loadUpcomingState() { try { return JSON.parse(localStorage.getItem(UPCOMING_KEY))||{}; } catch(e){ return {}; } }
@@ -367,7 +368,7 @@ function save(d) {
   saveUpcomingState(d.upcoming||{});
 }
 function wipeOld() {
-  ['vaultAug11','vaultAug10','vaultAug9','vaultAug8','vaultAug7','vaultAug6','vaultAug5','vaultAug4','vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
+  ['vaultSep1','vaultBillsState','vaultUpcomingState','vaultAug11','vaultAug10','vaultAug9','vaultAug8','vaultAug7','vaultAug6','vaultAug5','vaultAug4','vaultAug3','vaultAug2','vaultAug1','vaultV1','vaultV2','vaultV3','vaultV4','vaultV5','ahmedFinanceV1','ahmedFinanceV2',
    'ahmedFinanceV3','ahmedFinanceV4','ahmedFinanceV5','ahmedFinanceV6','ahmedFinanceV7',
    'ahmedFinanceV8','ahmedFinanceV9','ahmedFinanceV10','ahmedFinanceV11','ahmedFinanceV12',
    'ahmedFinanceV13','ahmedFinanceV14','ahmedFinanceV15','ahmedFinanceV16','ahmedFinanceV17',
@@ -381,6 +382,10 @@ function initSeeds() {
   d.txs = [...SEEDS, ...d.txs];
   // September: loans due 25th, not paid yet
   d.upcoming['2026-09'] = d.upcoming['2026-09'] || {};
+  // Already paid before the opening balance was taken — mark paid, no extra
+  // expense tx (already reflected in the 383.247 seed, no double-subtract)
+  d.bills['2026-09'] = d.bills['2026-09'] || {};
+  ['b_loan1','b_loan2','b_claude'].forEach(id => { d.bills['2026-09'][id] = true; });
   save(d);
 }
 
@@ -543,6 +548,7 @@ async function fetchFirebase() {
       if (knownIds.has(id)) return;
       const parsed=parseSMS(entry.rawMessage,id,entry.timestamp);
       if (!parsed) return;
+      if (parsed.date < SEED_DATE) return; // pre-dates opening balance, already baked into the seed
       result.push(parsed);
     });
     if (result.length>lastFBCount&&lastFBCount>0) showSyncBar();
@@ -904,8 +910,20 @@ function toggleRadio() {
 }
 
 // ── BOOT ─────────────────────────────────────────────────────
+function ensurePrepaid() {
+  // Runs every load, independent of initSeeds — guarantees loan1/loan2/claude
+  // stay marked paid for September even if seed init already ran before this fix shipped
+  const d = load();
+  d.bills['2026-09'] = d.bills['2026-09'] || {};
+  let changed = false;
+  ['b_loan1','b_loan2','b_claude'].forEach(id => {
+    if (!d.bills['2026-09'][id]) { d.bills['2026-09'][id] = true; changed = true; }
+  });
+  if (changed) save(d);
+}
 wipeOld();
 initSeeds();
+ensurePrepaid();
 // Request notification permission
 if ('Notification' in window && Notification.permission === 'default') {
   Notification.requestPermission();
