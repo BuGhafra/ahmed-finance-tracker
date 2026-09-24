@@ -385,7 +385,7 @@ function initSeeds() {
   // Already paid before the opening balance was taken — mark paid, no extra
   // expense tx (already reflected in the 383.247 seed, no double-subtract)
   d.bills['2026-09'] = d.bills['2026-09'] || {};
-  ['b_loan1','b_loan2','b_claude'].forEach(id => { d.bills['2026-09'][id] = true; });
+  ['b_loan1','b_loan2','b_claude','b_ytmusic'].forEach(id => { d.bills['2026-09'][id] = true; });
   save(d);
 }
 
@@ -938,7 +938,7 @@ function ensurePrepaid() {
   const d = load();
   d.bills['2026-09'] = d.bills['2026-09'] || {};
   let changed = false;
-  ['b_loan1','b_loan2','b_claude'].forEach(id => {
+  ['b_loan1','b_loan2','b_claude','b_ytmusic'].forEach(id => {
     if (!d.bills['2026-09'][id]) { d.bills['2026-09'][id] = true; changed = true; }
   });
   if (changed) save(d);
