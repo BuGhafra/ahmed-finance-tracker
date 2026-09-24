@@ -546,6 +546,7 @@ async function fetchFirebase() {
     Object.entries(data).forEach(([fbId,entry])=>{
       const id='sms_'+fbId;
       if (knownIds.has(id)) return;
+      if (isBaselined(id)) return;
       const parsed=parseSMS(entry.rawMessage,id,entry.timestamp);
       if (!parsed) return;
       if (parsed.date < SEED_DATE) return; // pre-dates opening balance, already baked into the seed
@@ -909,6 +910,27 @@ function toggleRadio() {
   else { audio.play().catch(()=>{}); btn.textContent='MUTE'; eq.classList.remove('paused'); radioPlaying=true; }
 }
 
+// ── FIREBASE BASELINE ───────────────────────────────────────────
+// Permanently ignore every transaction that existed in Firebase at the
+// moment of this reset, regardless of its SMS timestamp text. Only
+// transactions created AFTER this snapshot ever get imported again.
+const BASELINE_KEY = 'vaultFBBaseline';
+async function captureBaselineIfNeeded() {
+  if (localStorage.getItem(BASELINE_KEY)) return;
+  try {
+    const res = await fetch(FIREBASE + '/transactions.json');
+    const data = await res.json();
+    const ids = data ? Object.keys(data).map(fbId => 'sms_' + fbId) : [];
+    localStorage.setItem(BASELINE_KEY, JSON.stringify(ids));
+  } catch (e) {
+    localStorage.setItem(BASELINE_KEY, JSON.stringify([]));
+  }
+}
+function isBaselined(id) {
+  try { return (JSON.parse(localStorage.getItem(BASELINE_KEY)) || []).includes(id); }
+  catch (e) { return false; }
+}
+
 // ── BOOT ─────────────────────────────────────────────────────
 function ensurePrepaid() {
   // Runs every load, independent of initSeeds — guarantees loan1/loan2/claude
@@ -921,15 +943,18 @@ function ensurePrepaid() {
   });
   if (changed) save(d);
 }
-wipeOld();
-initSeeds();
-ensurePrepaid();
-// Request notification permission
-if ('Notification' in window && Notification.permission === 'default') {
-  Notification.requestPermission();
+async function boot() {
+  wipeOld();
+  initSeeds();
+  ensurePrepaid();
+  await captureBaselineIfNeeded();
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  refresh();
+  setInterval(refresh, 30000);
 }
-refresh();
-setInterval(refresh, 30000);
+boot();
 </script>
 </body>
 </html>
