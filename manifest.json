@@ -3,7 +3,7 @@
   "short_name": "Finance",
   "description": "Personal finance tracker for Ahmed",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#0f1117",
   "theme_color": "#6c63ff",
   "orientation": "portrait-primary",
