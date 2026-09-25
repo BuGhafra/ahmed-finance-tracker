@@ -625,13 +625,15 @@ function toggleUpcoming(id) {
   const was=!!d.upcoming[k][id];
   const u=UPCOMING.find(x=>x.id===id); if(!u) return;
   const txId='up_'+id+'_'+k;
-  const inSeeds=d.txs.some(t=>(t.id||'').startsWith('aug_')&&t.type==='income'&&Math.abs(t.amount-u.amount)<0.01&&(t.date||'').startsWith(k));
+  // Don't double-count: if a real SMS-synced income transaction already covers
+  // this transfer this month, the checkbox is just a visual toggle, no new tx.
+  const hasRealSmsTx = d.txs.some(t => (t.id||'').startsWith('sms_') && t.type==='income' && (t.date||'').startsWith(k) && (u.flexAmount ? t.amount>=20 : Math.abs(t.amount-u.amount)<2));
   if (!was) {
     d.upcoming[k][id]=true;
-    if (!inSeeds) { d.txs=d.txs.filter(t=>t.id!==txId); d.txs.push({id:txId,type:'income',desc:u.label,amount:u.amount,cat:'income',date:today(),source:'manual'}); }
+    if (!hasRealSmsTx) { d.txs=d.txs.filter(t=>t.id!==txId); d.txs.push({id:txId,type:'income',desc:u.label,amount:u.amount,cat:'income',date:today(),source:'manual'}); }
   } else {
     d.upcoming[k][id]=false;
-    if (!inSeeds) d.txs=d.txs.filter(t=>t.id!==txId);
+    if (!hasRealSmsTx) d.txs=d.txs.filter(t=>t.id!==txId);
   }
   save(d); refresh();
 }
