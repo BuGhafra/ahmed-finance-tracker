@@ -939,9 +939,15 @@ function ensurePrepaid() {
   // stay marked paid for September even if seed init already ran before this fix shipped
   const d = load();
   d.bills['2026-09'] = d.bills['2026-09'] || {};
+  d.upcoming['2026-09'] = d.upcoming['2026-09'] || {};
   let changed = false;
   ['b_loan1','b_loan2','b_claude','b_ytmusic'].forEach(id => {
     if (!d.bills['2026-09'][id]) { d.bills['2026-09'][id] = true; changed = true; }
+  });
+  // Rashid/Father/Mother already came in before the balance was re-anchored —
+  // mark them received visually, no tx added (already baked into the seed)
+  ['u_rashid','u_father','u_mother'].forEach(id => {
+    if (!d.upcoming['2026-09'][id]) { d.upcoming['2026-09'][id] = true; changed = true; }
   });
   if (changed) save(d);
 }
