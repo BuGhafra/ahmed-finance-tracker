@@ -308,7 +308,7 @@ const BILLS = [
 const UPCOMING = [
   { id:'u_rashid', label:'Rashid Mohamed',     note:'Monthly transfer', amount:200, senderContains:['RASHID MOHAMED SAID','MOHAMED RASHID'] },
   { id:'u_father', label:'Father (Ali)',        note:'Monthly transfer', amount:37,  senderContains:['ALI MOHAMED SALIM','MOHAMMED ALI','MOHAMED ALI'], flexAmount:true },
-  { id:'u_mother', label:'Mother (Shamsa)',     note:'WiFi contribution', amount:12, senderContains:['SHAMSA SALIM AL YAHMADI','SHAMSA SALIM','AL YAHMADI'], flexAmount:true },
+  { id:'u_mother', label:'Mother (Shamsa)',     note:'WiFi contribution', amount:12, senderContains:['SHAMSA SALIM AL YAHMADI','SHAMSA SALIM','AL YAHMADI'] },
 ];
 
 // ── CATEGORIES ──────────────────────────────────────────────
@@ -506,7 +506,7 @@ function autoCheckUpcoming(sender, amount) {
     const tokens = Array.isArray(u.senderContains) ? u.senderContains : [u.senderContains];
     const match = tokens.some(t => sender.toUpperCase().includes(t.toUpperCase()));
     if (!match) return;
-    if (u.flexAmount) { if(amount>=5) d.upcoming[k][u.id]=true; }
+    if (u.flexAmount) { if(amount>=20) d.upcoming[k][u.id]=true; }
     else { if(Math.abs(amount-u.amount)<2) d.upcoming[k][u.id]=true; }
   });
   save(d);
