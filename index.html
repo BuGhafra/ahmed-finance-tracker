@@ -698,6 +698,8 @@ function renderSavings(balance) {
   document.getElementById('savVal').textContent=savAmt+' OMR';
   const d=load(); const k=mk();
   const paid=d.bills[k]||{};
+  const mSaved=(d.txs||[]).filter(t=>t.cat==='saving'&&(t.date||'').startsWith(k)).reduce((s,t)=>s+t.amount,0);
+  const savedRemaining=Math.max(0,savAmt-mSaved);
   let billsLeft=0;
   BILLS.forEach(b=>{
     if (paid[b.id]) return;
@@ -705,8 +707,8 @@ function renderSavings(balance) {
     const hasTx=allTxs.some(t=>t.id===billTxId);
     if (!hasTx) billsLeft+=b.amount;
   });
-  const afterSavings=balance-savAmt;
-  // Spendable = after savings and remaining bills
+  const afterSavings=balance-savedRemaining;
+  // Spendable = after remaining savings goal and remaining bills
   const spendable=afterSavings-billsLeft;
   // Today's personal spending (for daily limit display)
   const todayStr=today();
@@ -720,6 +722,8 @@ function renderSavings(balance) {
   document.getElementById('savInfo').innerHTML=`
     <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
     <div class="sav-line"><span>Saving goal</span><span>- ${fmtS(savAmt)}</span></div>
+    <div class="sav-line"><span>Already saved</span><span class="${mSaved>0?'c-income':''}">${mSaved>0?'✓ '+fmtS(mSaved):'OMR 0.00'}</span></div>
+    <div class="sav-line"><span>Still need to save</span><span>- ${fmtS(savedRemaining)}</span></div>
     <div class="sav-line"><span>After saving</span><span>${fmtS(afterSavings)}</span></div>
     <div class="sav-line"><span>Bills remaining</span><span class="${billsLeft>0?'warn':''}">${billsLeft>0?'- '+fmtS(billsLeft):'✓ All paid'}</span></div>
     <div class="sav-line"><span>Free to spend</span><span class="${spendColor}">${fmtS(Math.max(0,spendable))}</span></div>
