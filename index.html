@@ -691,6 +691,17 @@ function toggleBill(id) {
   save(d); refresh();
 }
 
+function toggleSavingsPaid() {
+  // Same idea as bill checkboxes: a simple "did I set this month's
+  // savings aside yet" flag. When checked, the full savings goal is
+  // treated as met for the daily-limit math — no need to log an exact
+  // transaction amount.
+  const d=load(); const k=mk();
+  d.savingsPaid=d.savingsPaid||{};
+  d.savingsPaid[k]=!d.savingsPaid[k];
+  save(d); refresh();
+}
+
 // ── SAVINGS PLANNER ───────────────────────────────────────────
 function renderSavings(balance) {
   const slider=document.getElementById('savSlider');
@@ -699,7 +710,8 @@ function renderSavings(balance) {
   const d=load(); const k=mk();
   const paid=d.bills[k]||{};
   const mSaved=(d.txs||[]).filter(t=>t.cat==='saving'&&(t.date||'').startsWith(k)).reduce((s,t)=>s+t.amount,0);
-  const savedRemaining=Math.max(0,savAmt-mSaved);
+  const savingsPaid=!!(d.savingsPaid&&d.savingsPaid[k]);
+  const savedRemaining=savingsPaid?0:Math.max(0,savAmt-mSaved);
   let billsLeft=0;
   BILLS.forEach(b=>{
     if (paid[b.id]) return;
@@ -722,7 +734,7 @@ function renderSavings(balance) {
   document.getElementById('savInfo').innerHTML=`
     <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
     <div class="sav-line"><span>Saving goal</span><span>- ${fmtS(savAmt)}</span></div>
-    <div class="sav-line"><span>Already saved</span><span class="${mSaved>0?'c-income':''}">${mSaved>0?'✓ '+fmtS(mSaved):'OMR 0.00'}</span></div>
+    <div class="sav-line"><span>Savings set aside</span><span>${savingsPaid?'<button onclick="toggleSavingsPaid()" style="background:transparent;border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:4px;font-family:inherit;cursor:pointer">✓ Paid — UNDO</button>':'<button onclick="toggleSavingsPaid()" style="background:transparent;border:1px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:4px;font-family:inherit;cursor:pointer">Mark as paid</button>'}</span></div>
     <div class="sav-line"><span>Still need to save</span><span>- ${fmtS(savedRemaining)}</span></div>
     <div class="sav-line"><span>After saving</span><span>${fmtS(afterSavings)}</span></div>
     <div class="sav-line"><span>Bills remaining</span><span class="${billsLeft>0?'warn':''}">${billsLeft>0?'- '+fmtS(billsLeft):'✓ All paid'}</span></div>
