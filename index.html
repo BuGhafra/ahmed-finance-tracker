@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <title>VAULT-TEC // FINANCE</title>
 <style>
+html{height:100%}
 :root{
   --bg:#0a0800;--surface:#110e00;--surface2:#1a1600;--border:#3d3300;
   --accent:#f5c518;--accent2:#ffdd57;--danger:#ff4444;--warn:#ff8c00;
@@ -23,7 +24,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .sync-bar.show{transform:translateY(0);box-shadow:var(--glow)}
 
 /* NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .nav-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);font-size:.58rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s;font-family:'Share Tech Mono',monospace;letter-spacing:1px;text-transform:uppercase}
 .nav-btn .ni{font-size:1.2rem}
 .nav-btn.active{color:var(--accent);text-shadow:var(--glow)}
@@ -128,7 +129,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* RADIO */
-.radio-bar{position:fixed;bottom:62px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:10px;z-index:150}
+.radio-bar{position:fixed;bottom:62px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:10px;z-index:150;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .radio-eq{display:flex;align-items:flex-end;gap:2px;height:16px}
 .radio-eq span{width:3px;background:var(--accent);border-radius:1px;animation:eq 0.8s ease-in-out infinite alternate}
 .radio-eq span:nth-child(2){animation-delay:.2s;animation-duration:.6s}
