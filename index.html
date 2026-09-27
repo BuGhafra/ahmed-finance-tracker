@@ -728,8 +728,8 @@ function renderSavings(balance) {
   const daysLeft=daysRemainingInMonth();
   const workdays=workdaysLeft();
   const weekendDays=Math.max(0,daysLeft-workdays);
-  const dailyWeekday=(spendable>0&&workdays>0)?(spendable*0.55/workdays):0;
-  const dailyWeekend=(spendable>0&&weekendDays>0)?(spendable*0.45/weekendDays):0;
+  const dailyWeekday=(spendable>0&&workdays>0)?(spendable*(weekendDays>0?0.55:1)/workdays):0;
+  const dailyWeekend=(spendable>0&&weekendDays>0)?(spendable*(workdays>0?0.45:1)/weekendDays):0;
   const spendColor=spendable<0?'danger':spendable<30?'warn':'';
   document.getElementById('savInfo').innerHTML=`
     <div class="sav-line"><span>Balance now</span><span>${fmtS(balance)}</span></div>
