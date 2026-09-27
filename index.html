@@ -383,7 +383,7 @@ function initSeeds() {
   // Already paid before the opening balance was taken — mark paid, no extra
   // expense tx (already reflected in the 383.247 seed, no double-subtract)
   d.bills['2026-09'] = d.bills['2026-09'] || {};
-  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox'].forEach(id => { d.bills['2026-09'][id] = true; });
+  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox','b_voda'].forEach(id => { d.bills['2026-09'][id] = true; });
   save(d);
 }
 
@@ -932,7 +932,7 @@ function ensurePrepaid() {
   d.bills['2026-09'] = d.bills['2026-09'] || {};
   d.upcoming['2026-09'] = d.upcoming['2026-09'] || {};
   let changed = false;
-  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox'].forEach(id => {
+  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox','b_voda'].forEach(id => {
     if (!d.bills['2026-09'][id]) { d.bills['2026-09'][id] = true; changed = true; }
   });
   // Rashid/Father/Mother already came in before the balance was re-anchored —
