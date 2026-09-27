@@ -681,19 +681,13 @@ function renderBills() {
 }
 
 function toggleBill(id) {
+  // Purely visual — checking this box never adds or removes money.
+  // The real deduction already happens automatically from the actual
+  // card-charge or transfer SMS when it syncs in. This is just your
+  // own "did I pay this yet" checklist, decoupled from the balance.
   const d=load(); const k=mk();
   d.bills[k]=d.bills[k]||{};
-  const wasPaid=!!d.bills[k][id];
-  const bill=BILLS.find(b=>b.id===id); if(!bill) return;
-  const txId='bill_tx_'+id+'_'+k;
-  if (!wasPaid) {
-    d.bills[k][id]=true;
-    const smsAlreadyCovered=allTxs.some(t=>t.source==='sms'&&t.type==='expense'&&Math.abs(t.amount-bill.amount)<0.5&&(t.date||'').startsWith(k));
-    if (!smsAlreadyCovered) { d.txs=d.txs.filter(t=>t.id!==txId); d.txs.push({id:txId,type:'expense',desc:bill.name,amount:bill.amount,cat:bill.cat,date:today(),source:'bill'}); }
-  } else {
-    d.bills[k][id]=false;
-    d.txs=d.txs.filter(t=>t.id!==txId);
-  }
+  d.bills[k][id]=!d.bills[k][id];
   save(d); refresh();
 }
 
