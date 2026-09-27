@@ -760,18 +760,31 @@ function onSavSlider() {
   renderSavings(allInc-allExp);
 }
 
-function daysRemainingInMonth() {
+function nextPaydayDate() {
+  // Salary usually lands 23rd-25th; use the 25th as the anchor.
+  // Once today hits the 25th, the target rolls to next month's 25th.
   const now=new Date();
-  const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
-  return last-now.getDate();
+  let target=new Date(now.getFullYear(),now.getMonth(),25);
+  if (now.getDate()>=25) target=new Date(now.getFullYear(),now.getMonth()+1,25);
+  return target;
+}
+function daysRemainingInMonth() {
+  // Despite the name, this now spans to the next payday, not month-end —
+  // so a daily limit set on the 27th correctly counts all the way into
+  // next month instead of stopping dead at the 30th.
+  const now=new Date(); now.setHours(0,0,0,0);
+  const target=nextPaydayDate(); target.setHours(0,0,0,0);
+  return Math.max(0,Math.round((target-now)/86400000));
 }
 function workdaysLeft() {
   const now=new Date();
-  const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const target=nextPaydayDate();
+  let cur=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
   let count=0;
-  for (let d=now.getDate()+1;d<=last;d++) {
-    const day=new Date(now.getFullYear(),now.getMonth(),d).getDay();
+  while (cur<target) {
+    const day=cur.getDay();
     if (day>=0&&day<=3) count++;
+    cur.setDate(cur.getDate()+1);
   }
   return count;
 }
