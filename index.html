@@ -286,7 +286,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 // ── CONFIG ──────────────────────────────────────────────────
 const VERSION = 'vaultFreshStart';
 const FIREBASE = 'https://ahmed-finance-tracker-default-rtdb.firebaseio.com';
-const SEED_DATE = '2026-09-25'; // ignore any Firebase SMS entries dated before the opening balance snapshot
+const SEED_DATE = '2026-09-27'; // ignore any Firebase SMS entries dated before the opening balance snapshot
 
 // ── BILLS ────────────────────────────────────────────────────
 const BILLS = [
@@ -330,7 +330,7 @@ const CATS = {
 // Rashid already received: +200.000
 // Salary not yet arrived as of rebuild time
 const SEEDS = [
-  { id:'sep_s0', type:'income', desc:'Opening Balance', amount:538.097, cat:'income', date:'2026-09-25' },
+  { id:'sep_s0', type:'income', desc:'Opening Balance', amount:169.487, cat:'income', date:'2026-09-27' },
 ];
 
 // ── STATE ────────────────────────────────────────────────────
@@ -384,7 +384,7 @@ function initSeeds() {
   // Already paid before the opening balance was taken — mark paid, no extra
   // expense tx (already reflected in the 383.247 seed, no double-subtract)
   d.bills['2026-09'] = d.bills['2026-09'] || {};
-  ['b_loan1','b_loan2','b_claude','b_ytmusic'].forEach(id => { d.bills['2026-09'][id] = true; });
+  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox'].forEach(id => { d.bills['2026-09'][id] = true; });
   save(d);
 }
 
@@ -786,15 +786,8 @@ function checkDailyLimit(weekdayLimit, weekendLimit) {
   if (limit<=0) return;
   const todayStr=today();
   todaySpent=allTxs.filter(t=>t.date===todayStr&&isDailySpend(t)).reduce((s,t)=>s+t.amount,0);
-  if (todaySpent>=limit&&'Notification' in window) {
-    if (typeof Notification !== 'undefined') {
-      if (Notification.permission==='granted') {
-        new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)} / Limit: ${fmtS(limit)}`});
-      } else if (Notification.permission!=='denied') {
-        Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('⚠️ VAULT-TEC ALERT',{body:`Daily limit reached! Spent: ${fmtS(todaySpent)} / Limit: ${fmtS(limit)}`}); });
-      }
-    }
-  }
+  // No push notification — the Weekday/Weekend Limit cards on screen are the
+  // only signal; nothing fires in the background.
 }
 
 // ── TX LOG ────────────────────────────────────────────────────
@@ -941,7 +934,7 @@ function ensurePrepaid() {
   d.bills['2026-09'] = d.bills['2026-09'] || {};
   d.upcoming['2026-09'] = d.upcoming['2026-09'] || {};
   let changed = false;
-  ['b_loan1','b_loan2','b_claude','b_ytmusic'].forEach(id => {
+  ['b_loan1','b_loan2','b_claude','b_ytmusic','b_xbox'].forEach(id => {
     if (!d.bills['2026-09'][id]) { d.bills['2026-09'][id] = true; changed = true; }
   });
   // Rashid/Father/Mother already came in before the balance was re-anchored —
@@ -956,9 +949,6 @@ async function boot() {
   initSeeds();
   ensurePrepaid();
   await captureBaselineIfNeeded();
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
   refresh();
   setInterval(refresh, 30000);
 }
