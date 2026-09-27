@@ -779,6 +779,7 @@ function isDailySpend(t) {
 }
 
 function checkDailyLimit(weekdayLimit, weekendLimit) {
+  // Informational only — no push notifications, just the numbers shown on screen.
   const now=new Date();
   const day=now.getDay();
   const isWeekend=(day>=4); // Thu-Sat
@@ -786,8 +787,6 @@ function checkDailyLimit(weekdayLimit, weekendLimit) {
   if (limit<=0) return;
   const todayStr=today();
   todaySpent=allTxs.filter(t=>t.date===todayStr&&isDailySpend(t)).reduce((s,t)=>s+t.amount,0);
-  // No push notification — the Weekday/Weekend Limit cards on screen are the
-  // only signal; nothing fires in the background.
 }
 
 // ── TX LOG ────────────────────────────────────────────────────
@@ -949,6 +948,9 @@ async function boot() {
   initSeeds();
   ensurePrepaid();
   await captureBaselineIfNeeded();
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
   refresh();
   setInterval(refresh, 30000);
 }
